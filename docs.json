@@ -14,42 +14,42 @@
         "group": "Getting Started",
         "icon": "rocket",
         "pages": [
-          "introduction",
-          "installation",
-          "quickstart",
-          "configuration"
+          "introduction.mdx",
+          "installation.mdx",
+          "quickstart.mdx",
+          "configuration.mdx"
         ]
       },
       {
         "group": "Configuration",
         "icon": "settings",
         "pages": [
-          "project-config",
-          "app-config",
-          "llm-providers",
-          "file-patterns"
+          "project-config.mdx",
+          "app-config.mdx",
+          "llm-providers.mdx",
+          "file-patterns.mdx"
         ]
       },
       {
         "group": "Creating Rules",
         "icon": "wand-2",
         "pages": [
-          "rule-anatomy",
-          "check-rules",
-          "judge-rules",
-          "target-specification",
-          "best-practices",
-          "examples"
+          "rule-anatomy.mdx",
+          "check-rules.mdx",
+          "judge-rules.mdx",
+          "target-specification.mdx",
+          "best-practices.mdx",
+          "examples.mdx"
         ]
       },
       {
         "group": "Reference",
         "icon": "book",
         "pages": [
-          "output-formats",
-          "quality-scoring",
-          "troubleshooting",
-          "contributing"
+          "output-formats.mdx",
+          "quality-scoring.mdx",
+          "troubleshooting.mdx",
+          "contributing.mdx"
         ]
       }
     ]

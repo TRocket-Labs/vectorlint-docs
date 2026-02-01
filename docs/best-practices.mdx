@@ -1,0 +1,402 @@
+---
+description: Best practices for writing effective VectorLint rules.
+---
+
+# Best Practices
+
+Write clear, effective prompts that produce consistent, reliable results from LLMs.
+
+## 1. Be Specific and Clear
+
+LLMs respond best to explicit, unambiguous instructions.
+
+❌ **Bad:**
+```markdown
+Check if the content is good.
+```
+
+✅ **Good:**
+```markdown
+Assess the content for clarity, engagement, and technical accuracy.
+For each dimension, provide:
+- A score from 1-4
+- Specific examples from the text
+- Suggestions for improvement if below 4
+```
+
+## 2. Provide Structure
+
+Give the LLM a clear framework to follow.
+
+### For Check Rules
+
+```markdown
+Check this content for X.
+
+For each issue found, provide:
+1. Line number
+2. Type of issue
+3. Incorrect text
+4. Correct version
+5. Context sentence
+```
+
+### For Judge Rules
+
+```markdown
+Evaluate this content across these dimensions:
+
+1. Dimension 1 (weight: 10)
+2. Dimension 2 (weight: 5)
+3. Dimension 3 (weight: 3)
+
+For each dimension:
+- Provide a score from 1-4
+- Cite specific examples
+- Explain the rating
+```
+
+## 3. Use Context Banks
+
+Provide background information to help the LLM understand your domain.
+
+```markdown
+## CONTEXT BANK
+
+**Developer Audience**: Software engineers who value:
+- Technical precision over marketing fluff
+- Practical examples over theory
+- Code-first explanations
+
+**Tone Guide**: Professional but accessible
+- Use "you" to address reader
+- Avoid jargon unless defining it
+- Prefer active voice
+```
+
+## 4. Define Clear Rubrics
+
+For judge rules, the 1-4 scale needs clear boundaries.
+
+❌ **Vague Rubric:**
+```markdown
+### Excellent
+Good content.
+
+### Good
+Okay content.
+```
+
+✅ **Clear Rubric:**
+```markdown
+### Excellent <score=4>
+
+Specific, immediately appealing benefit clearly stated. Reader knows exactly what they'll get.
+
+**Examples:**
+- "Build a REST API in 10 Minutes"
+- "Reduce AWS Costs by 50% with These 3 Tips"
+
+### Good <score=3>
+
+Clear benefit but less specific impact or slightly vague.
+
+**Examples:**
+- "Build APIs Faster"
+- "Save Money on Cloud Infrastructure"
+```
+
+## 5. Include Examples
+
+Show the LLM what good vs. bad looks like.
+
+```markdown
+## RUBRIC
+
+# Value Communication <weight=10>
+
+### Excellent <score=4>
+
+Specific benefit clearly stated.
+
+**Examples:**
+- "Build a REST API in 10 Minutes"
+- "Reduce AWS Costs by 50%"
+
+### Poor <score=1>
+
+No benefit communicated.
+
+**Examples:**
+- "API Development Guide"
+- "Understanding Cloud Costs"
+```
+
+## 6. Tell LLM What to Output
+
+Specify the exact output format.
+
+```markdown
+For each error, provide:
+- Line number where it occurs
+- The incorrect text
+- The correct version
+- A brief explanation
+```
+
+Or for JSON output:
+
+```markdown
+Provide output in this JSON format:
+{
+  "violations": [
+    {
+      "line": 15,
+      "type": "grammar",
+      "incorrect": "It's",
+      "correct": "Its",
+      "explanation": "Possessive form of 'it' is 'Its', not 'It's'"
+    }
+  ]
+}
+```
+
+## 7. Handle Edge Cases
+
+Anticipate scenarios where content might not match expected patterns.
+
+```markdown
+If the content has no [X], state: "No [X] found" and exit.
+
+If the content has fewer than 100 words, note: "Content too short for reliable [X] analysis."
+```
+
+## 8. Use Exclusions Wisely
+
+Tell LLM what to ignore.
+
+```markdown
+Check for spelling errors.
+
+Ignore:
+- Technical terms specific to the domain (e.g., "Kubernetes", "microservices")
+- Proper names and brands (e.g., "Google", "AWS")
+- Words with capital letters that might be acronyms (e.g., "API", "REST")
+```
+
+## 9. Weight Criteria Appropriately
+
+For judge rules, weights should reflect real importance.
+
+### Scenario 1: SEO-Focused Content
+
+```yaml
+criteria:
+  - name: SEO Optimization
+    weight: 70  # Primary focus
+  - name: Readability
+    weight: 15
+  - name: Engagement
+    weight: 15
+```
+
+### Scenario 2: Balanced Content
+
+```yaml
+criteria:
+  - name: Clarity
+    weight: 30
+  - name: Accuracy
+    weight: 30
+  - name: Engagement
+    weight: 20
+  - name: Completeness
+    weight: 20
+```
+
+### Scenario 3: Single Dominant Criterion
+
+```yaml
+criteria:
+  - name: Technical Accuracy
+    weight: 60  # Critical
+  - name: Clarity
+    weight: 20
+  - name: Tone
+    weight: 20
+```
+
+## 10. Test and Iterate
+
+Start simple, then refine.
+
+### Iteration 1: Basic Version
+
+```markdown
+---
+type: judge
+id: Headline
+name: Headline Evaluator
+criteria:
+  - name: Quality
+    weight: 10
+---
+
+Is this headline good?
+```
+
+### Iteration 2: Add Rubric
+
+```markdown
+---
+type: judge
+id: Headline
+name: Headline Evaluator
+criteria:
+  - name: Value Communication
+    weight: 10
+---
+
+## RUBRIC
+
+### Excellent <score=4>
+Specific benefit clearly stated.
+
+### Poor <score=1>
+No benefit communicated.
+```
+
+### Iteration 3: Complete Version
+
+```markdown
+---
+type: judge
+id: Headline
+name: Headline Evaluator
+criteria:
+  - name: Value Communication
+    weight: 12
+  - name: Curiosity Gap
+    weight: 2
+---
+
+## RUBRIC
+
+# Value Communication <weight=12>
+
+### Excellent <score=4>
+
+Specific, immediately appealing benefit clearly stated. Reader knows exactly what they'll gain.
+
+**Examples:**
+- "Build a REST API in 10 Minutes"
+- "Reduce AWS Costs by 50% with These 3 Tips"
+
+[... full rubric with examples for each level ...]
+```
+
+## Common Mistakes to Avoid
+
+### 1. Too Ambiguous
+
+❌ "Check if it's engaging"
+
+✅ "Check if content uses storytelling, specific examples, and active voice to engage reader"
+
+### 2. No Output Format
+
+❌ "Check for grammar errors"
+
+✅ "Check for grammar errors. For each error, provide: line number, incorrect text, correct version, and explanation"
+
+### 3. Missing Examples
+
+❌ "Headline should communicate value"
+
+✅ "Headline should communicate value. Good examples: 'Build X in Y time', 'Reduce costs by Z%'"
+
+### 4. Unclear Scoring
+
+❌ "Rate from 1-4"
+
+✅ "Rate from 1-4 based on: specificity of benefit, clarity of messaging, and relevance to audience"
+
+### 5. Too Long Prompts
+
+LLMs have limited context windows. Keep prompts focused.
+
+```markdown
+## DO
+
+- Focus on specific evaluation criteria
+- Use concise language
+- Include essential examples
+
+## DON'T
+
+- Write entire style guides in the prompt (use CONTEXT BANK)
+- Include 50+ examples for each score level
+- Replicate information that's in VECTORLINT.md
+```
+
+## Prompt Structure Template
+
+Use this template as a starting point:
+
+```markdown
+---
+[YAML frontmatter]
+---
+
+[Role/Persona]
+
+## CONTEXT
+
+[Audience, domain, requirements]
+
+## INSTRUCTION
+
+[Clear directive of what to evaluate]
+
+## OUTPUT FORMAT
+
+[Exact structure for response]
+
+## RUBRIC (for judge rules)
+
+# Criterion 1 <weight=X>
+
+### Excellent <score=4>
+[Definition]
+[Examples]
+
+### Good <score=3>
+[Definition]
+[Examples]
+
+### Fair <score=2>
+[Definition]
+[Examples]
+
+### Poor <score=1>
+[Definition]
+[Examples]
+
+[Repeat for each criterion]
+```
+
+## Testing Your Rules
+
+Before deploying rules to production:
+
+1. **Test on sample content** with known quality
+2. **Check consistency** - run same content multiple times
+3. **Validate scores** - do high-scoring content actually pass?
+4. **Refine rubric** - adjust boundaries between score levels
+5. **Test edge cases** - empty content, very short, very long
+
+## Next Steps
+
+- **[Check Rules](./check-rules)** - Pass/fail rules
+- **[Judge Rules](./judge-rules)** - Rubric-based rules
+- **[Examples](./examples)** - Practical rule examples

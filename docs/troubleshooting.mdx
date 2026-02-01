@@ -1,0 +1,465 @@
+---
+description: Common issues and solutions for VectorLint.
+---
+
+# Troubleshooting
+
+Solutions for common issues when using VectorLint.
+
+## Installation Issues
+
+### VectorLint Command Not Found
+
+**Symptom:**
+```bash
+vectorlint --help
+bash: vectorlint: command not found
+```
+
+**Solutions:**
+
+1. **Verify Installation:**
+   ```bash
+   npm list -g vectorlint
+   ```
+
+2. **Check PATH:**
+   ```bash
+   which vectorlint
+   ```
+
+3. **Add to PATH (if needed):**
+   ```bash
+   # Add to shell profile (~/.bashrc, ~/.zshrc)
+   export PATH="$(npm config get prefix)/bin:$PATH"
+   ```
+
+4. **Reinstall if missing:**
+   ```bash
+   npm install -g vectorlint
+   ```
+
+### Permission Denied During Installation
+
+**Symptom:**
+```bash
+npm install -g vectorlint
+Error: EACCES: permission denied
+```
+
+**Solutions:**
+
+1. **Use sudo (Linux/macOS):**
+   ```bash
+   sudo npm install -g vectorlint
+   ```
+
+2. **Fix npm permissions:**
+   ```bash
+   mkdir ~/.npm-global
+   npm config set prefix '~/.npm-global'
+   export PATH="~/.npm-global/bin:$PATH"
+   ```
+
+3. **Use npx instead:**
+   ```bash
+   npx vectorlint doc.md
+   ```
+
+## Configuration Issues
+
+### Config File Not Found
+
+**Symptom:**
+```
+Error: Configuration file not found at ~/.vectorlint/config.toml
+```
+
+**Solutions:**
+
+1. **Generate config:**
+   ```bash
+   vectorlint init
+   ```
+
+2. **Check config location:**
+   ```bash
+   vectorlint ls-dirs
+   ```
+
+3. **Create manually:**
+   ```bash
+   mkdir -p ~/.vectorlint
+   touch ~/.vectorlint/config.toml
+   ```
+
+### API Key Not Working
+
+**Symptom:**
+```
+Error: Failed to authenticate with OpenAI
+```
+
+**Solutions:**
+
+1. **Verify API key:**
+   ```bash
+   # Check if key exists in config
+   cat ~/.vectorlint/config.toml
+   ```
+
+2. **Check key format:**
+   ```toml
+   # Correct
+   OPENAI_API_KEY = "sk-..."
+
+   # Wrong
+   OPENAI_API_KEY = 'sk-...'  # Use double quotes
+   OPENAI_API_KEY = sk-...       # Needs quotes
+   ```
+
+3. **Test with .env override:**
+   ```bash
+   # Create .env file
+   echo 'OPENAI_API_KEY=sk-...' > .env
+   vectorlint doc.md
+   ```
+
+### Rules Not Running
+
+**Symptom:**
+```
+✓ Checking doc.md...
+No rules configured for this file type.
+```
+
+**Solutions:**
+
+1. **Check RulesPath:**
+   ```ini
+   # .vectorlint.ini
+   RulesPath=.github/rules
+   ```
+
+2. **Verify rules exist:**
+   ```bash
+   ls -la .github/rules/
+   ```
+
+3. **Check file patterns:**
+   ```ini
+   # Ensure pattern matches your files
+   [**/*.md]  # Matches .md files anywhere
+   [docs/**/*.md]  # Matches only in docs/
+   ```
+
+## LLM Issues
+
+### Rate Limit Exceeded
+
+**Symptom:**
+```
+Error: Rate limit exceeded. Please try again later.
+```
+
+**Solutions:**
+
+1. **Reduce concurrency:**
+   ```ini
+   # .vectorlint.ini
+   Concurrency=2  # Reduce from 4
+   ```
+
+2. **Wait and retry:**
+   ```bash
+   # Rate limits reset periodically (check provider docs)
+   sleep 60 && vectorlint doc.md
+   ```
+
+3. **Use multiple API keys:**
+   ```bash
+   # Create multiple config files and rotate
+   for key in "${KEYS[@]}"; do
+     export OPENAI_API_KEY="$key"
+     vectorlint batch-${i}.md
+   done
+   ```
+
+### Context Window Exceeded
+
+**Symptom:**
+```
+Error: Content exceeds maximum context window.
+```
+
+**Solutions:**
+
+1. **Evaluate as chunks:**
+   ```yaml
+   # Rule frontmatter
+   evaluateAs: chunk
+   ```
+
+2. **Process in sections:**
+   ```bash
+   # Split large files
+   split -l 1000 large-doc.md part-
+   vectorlint part-*
+   ```
+
+3. **Use provider with larger context:**
+   ```toml
+   # ~/.vectorlint/config.toml
+   [env]
+   LLM_PROVIDER = "anthropic"  # Larger context than OpenAI
+   ```
+
+### Slow Evaluation
+
+**Symptom:**
+```
+VectorLint taking 30+ seconds per file.
+```
+
+**Solutions:**
+
+1. **Reduce concurrency:**
+   ```ini
+   Concurrency=2
+   ```
+
+2. **Use cheaper/faster model:**
+   ```toml
+   [env]
+   LLM_PROVIDER = "openai"  # Faster than some alternatives
+   ```
+
+3. **Check network:**
+   ```bash
+   # Test connection to LLM provider
+   curl -I https://api.openai.com
+   ```
+
+4. **Disable unnecessary rules:**
+   ```ini
+   [content/drafts/**/*.md]
+   RunRules=  # Skip rules for drafts
+   ```
+
+## Scoring Issues
+
+### Inconsistent Scores
+
+**Symptom:**
+Running same content multiple times produces different scores.
+
+**Solutions:**
+
+1. **Check temperature settings:**
+   - VectorLint uses low temperature for consistency
+   - High temperature = more variance
+
+2. **Test stability:**
+   ```bash
+   for i in {1..5}; do
+     vectorlint sample.md --output json | jq '.files[].averageScore'
+   done
+   ```
+
+3. **Report if variance > 1.0 point:**
+   - Some variance is normal (LLMs aren't deterministic)
+   - Large variance may indicate prompt issues
+
+### Unexpected Low Scores
+
+**Symptom:**
+Content that looks good gets low scores (3-4/10).
+
+**Solutions:**
+
+1. **Review rubric:**
+   - Check if rubric boundaries are too strict
+   - Adjust score levels if needed
+
+2. **Check prompt clarity:**
+   - Instructions may be ambiguous
+   - Make rubric more specific
+
+3. **Test on known-good content:**
+   ```bash
+   vectorlint known-good.md
+   ```
+   - If score is low, rubric may be too strict
+
+4. **Compare with human evaluation:**
+   - Manually score same content
+   - Compare with VectorLint output
+   - Identify discrepancies
+
+### Always Getting Perfect Scores
+
+**Symptom:**
+All content scores 10/10 regardless of quality.
+
+**Solutions:**
+
+1. **Check if rules are running:**
+   ```bash
+   vectorlint doc.md --verbose
+   ```
+
+2. **Verify strictness:**
+   ```ini
+   # May be set too lenient
+   GrammarChecker.strictness=1
+   ```
+
+3. **Check severity filtering:**
+   ```bash
+   # Low-severity issues may be hidden
+   vectorlint doc.md --output json | jq '.files[].rules[].violations[]'
+   ```
+
+## File Processing Issues
+
+### Files Not Being Checked
+
+**Symptom:**
+```bash
+vectorlint "**/*.md"
+✓ No files matched pattern.
+```
+
+**Solutions:**
+
+1. **Verify glob pattern:**
+   ```bash
+   # Test pattern
+   ls "**/*.md"
+   ```
+
+2. **Check file extensions:**
+   ```bash
+   # May be .mdx instead of .md
+   ls docs/
+   ```
+
+3. **Use correct quotes:**
+   ```bash
+   # Correct
+   vectorlint "**/*.md"
+
+   # Wrong (no expansion)
+   vectorlint '**/*.md'
+   ```
+
+### Skipped Files
+
+**Symptom:**
+Files are skipped even though pattern matches.
+
+**Solutions:**
+
+1. **Check exclusions:**
+   ```bash
+   # .gitignore may be excluding files
+   cat .gitignore
+   ```
+
+2. **Verify file patterns:**
+   ```ini
+   # May have exclusion pattern
+   [!drafts/**]
+   RunRules=  # This skips all matching files
+   ```
+
+3. **Check scan paths:**
+   ```bash
+   # Explicitly specify path if glob not working
+   vectorlint docs/ --scan-paths docs/
+   ```
+
+## Debugging Tips
+
+### Enable Verbose Output
+
+```bash
+vectorlint doc.md --verbose
+```
+
+Shows:
+- Which files are being processed
+- Which rules are running
+- API requests being made
+- Response times
+
+### Check Configuration
+
+```bash
+# Show all config locations
+vectorlint ls-dirs
+
+# Validate config
+vectorlint config validate
+```
+
+### Test Individual Rules
+
+```bash
+# Create a test rule file
+echo '---\nevaluator: base\ntype: check\nid: Test\nname: Test\nseverity: warning\n---\nCheck this.' > test-rule.md
+
+# Run only this rule
+vectorlint doc.md --rules test-rule.md
+```
+
+### Export Debug Info
+
+```bash
+# Capture full context
+vectorlint doc.md --output json > debug.json
+
+# Review structure
+jq '.' debug.json
+```
+
+## Getting Help
+
+### VectorLint Help
+
+```bash
+# General help
+vectorlint --help
+
+# Command-specific help
+vectorlint init --help
+vectorlint lint --help
+```
+
+### Check Logs
+
+```bash
+# VectorLint logs to ~/.vectorlint/logs/
+ls -la ~/.vectorlint/logs/
+
+# View recent errors
+cat ~/.vectorlint/logs/error.log | tail -50
+```
+
+### Report Issues
+
+If you encounter an issue not covered here:
+
+1. **Check existing issues:**
+   - https://github.com/TRocket-Labs/vectorlint/issues
+
+2. **Create new issue:**
+   - Include: VectorLint version, OS, LLM provider, error message
+   - Provide: Minimal reproduction steps
+   - Attach: Sample config and content (remove API keys)
+
+## Next Steps
+
+- **[Configuration](./configuration)** - Configuration guide
+- **[Output Formats](./output-formats)** - Understanding output
+- **[Contributing](./contributing)** - Report issues or contribute

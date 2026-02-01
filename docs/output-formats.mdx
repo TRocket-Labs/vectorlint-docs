@@ -1,0 +1,306 @@
+---
+description: Understanding VectorLint output formats and how to use them.
+---
+
+# Output Formats
+
+VectorLint supports multiple output formats for different use cases.
+
+## Formats
+
+| Format | Use Case | Best For |
+|---------|----------|----------|
+| **line** | Human-readable terminal output | Interactive development, quick checks |
+| **json** | Machine-readable data | CI/CD integration, programmatic processing |
+| **vale-json** | Vale-compatible format | Vale integration, tool compatibility |
+
+## Line Format (Default)
+
+Human-readable output with colored scores and issue details.
+
+### Usage
+
+```bash
+# Default (line format)
+vectorlint doc.md
+
+# Explicit
+vectorlint doc.md --output line
+```
+
+### Output Example
+
+```bash
+✓ Checking content/docs/intro.md...
+
+Grammar Checker            ████████████ 9.0/10
+✓ No issues found
+
+Headline Evaluator          ███████░░░░ 6.7/10
+⚠ Missing value proposition
+  → Line 1: "Introduction"
+  → Suggestion: Add benefit or outcome to the headline
+
+AI Pattern Detector         ████████████ 10.0/10
+✓ Content appears human-written
+
+✓ Checking content/docs/api.md...
+
+Technical Accuracy         ██████░░░░ 5.0/10
+✗ Outdated information on line 45
+  → "AWS Lambda uses Node.js 10.x"
+  → Correct: "AWS Lambda supports Node.js 20.x"
+```
+
+### Visual Indicators
+
+| Symbol | Meaning |
+|---------|----------|
+| `✓` | Success, no issues |
+| `✗` | Error, severity=error |
+| `⚠` | Warning, severity=warning |
+| `█` | Score bar (full = 10/10) |
+| `░` | Score bar (empty = 0/10) |
+
+## JSON Format
+
+Machine-readable output for CI/CD and automation.
+
+### Usage
+
+```bash
+vectorlint doc.md --output json
+```
+
+### Output Structure
+
+```json
+{
+  "files": [
+    {
+      "path": "content/docs/intro.md",
+      "rules": [
+        {
+          "ruleId": "GrammarChecker",
+          "name": "Grammar Checker",
+          "score": 9.0,
+          "violations": []
+        },
+        {
+          "ruleId": "HeadlineEvaluator",
+          "name": "Headline Evaluator",
+          "score": 6.7,
+          "violations": [
+            {
+              "line": 1,
+              "message": "Missing value proposition",
+              "suggestion": "Add benefit or outcome to the headline",
+              "severity": "warning"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalFiles": 2,
+    "totalRules": 6,
+    "averageScore": 7.67,
+    "violationsCount": 3,
+    "errorCount": 1,
+    "warningCount": 2
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Description |
+|-----------|------|-------------|
+| `files` | array | List of evaluated files |
+| `path` | string | File path |
+| `rules` | array | Rules run on the file |
+| `ruleId` | string | Rule identifier |
+| `name` | string | Rule name |
+| `score` | number | Quality score (0-10) |
+| `violations` | array | List of issues found |
+| `summary` | object | Overall statistics |
+
+### Use Cases
+
+#### CI/CD Integration
+
+```yaml
+# GitHub Actions
+name: VectorLint Check
+
+on: [pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install VectorLint
+        run: npm install -g vectorlint
+      - name: Lint content
+        run: vectorlint "**/*.md" --output json > results.json
+      - name: Check scores
+        run: |
+          ERROR_COUNT=$(jq '[.files[].rules[] | select(.score < 8.0)] | length' results.json)
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo "Content quality below threshold"
+            exit 1
+          fi
+```
+
+#### Custom Processing
+
+```javascript
+// Process JSON output
+const results = JSON.parse(fs.readFileSync('results.json', 'utf8'));
+
+results.files.forEach(file => {
+  const avgScore = file.rules.reduce((sum, rule) => sum + rule.score, 0) / file.rules.length;
+
+  if (avgScore < 8.0) {
+    console.log(`❌ ${file.path}: ${avgScore.toFixed(2)}/10`);
+  } else {
+    console.log(`✓ ${file.path}: ${avgScore.toFixed(2)}/10`);
+  }
+});
+```
+
+## Vale JSON Format
+
+Vale-compatible format for integration with Vale-supporting tools.
+
+### Usage
+
+```bash
+vectorlint doc.md --output vale-json
+```
+
+### Output Structure
+
+```json
+[
+  {
+    "Path": "content/docs/intro.md",
+    "StartLine": 1,
+    "EndLine": 50,
+    "Chk": "grammar",
+    "Severity": "warning",
+    "Message": "Missing value proposition in headline",
+    "Link": "https://github.com/TRocket-Labs/vectorlint"
+  },
+  {
+    "Path": "content/docs/api.md",
+    "StartLine": 45,
+    "EndLine": 45,
+    "Chk": "technical-accuracy",
+    "Severity": "error",
+    "Message": "Outdated information: AWS Lambda uses Node.js 10.x (should be 20.x)",
+    "Link": "https://github.com/TRocket-Labs/vectorlint"
+  }
+]
+```
+
+### Properties
+
+| Property | Type | Description |
+|-----------|------|-------------|
+| `Path` | string | File path |
+| `StartLine` | number | Line where issue starts |
+| `EndLine` | number | Line where issue ends |
+| `Chk` | string | Check identifier |
+| `Severity` | string | `error` or `warning` |
+| `Message` | string | Issue description |
+| `Link` | string | URL to rule documentation |
+
+### Use Cases
+
+#### Vale Integration
+
+```yaml
+# Vale config with VectorLint integration
+StylesPath = .vale/styles
+
+[*.{md,txt}]
+BasedOnStyles = ValeStyle
+Check = ValeStyle
+
+# Use VectorLint for specific checks
+[content/docs/**/*.md]
+Check = ValeStyle, VectorLintAI
+```
+
+#### IDE Support
+
+Many IDEs support Vale output format. VectorLint's vale-json output can integrate directly:
+
+- VS Code (via Vale extension)
+- Sublime Text (via Vale plugin)
+- Atom (via linter-vale)
+
+#### Custom Tools
+
+```python
+# Process Vale JSON output
+import json
+
+with open('results.json') as f:
+    issues = json.load(f)
+
+    for issue in issues:
+        if issue['Severity'] == 'error':
+            print(f"ERROR: {issue['Message']} (line {issue['StartLine']})")
+        elif issue['Severity'] == 'warning':
+            print(f"WARNING: {issue['Message']} (line {issue['StartLine']})")
+```
+
+## Choosing a Format
+
+| Scenario | Recommended Format |
+|-----------|-------------------|
+| **Interactive development** | line |
+| **Quick checks during writing** | line |
+| **CI/CD pipelines** | json |
+| **Automated quality gates** | json |
+| **Vale integration** | vale-json |
+| **Custom tooling** | json or vale-json |
+| **IDE integration** | vale-json |
+
+## Output Control
+
+### Verbosity
+
+```bash
+# Verbose output (more details)
+vectorlint doc.md --verbose
+
+# Quiet output (minimal information)
+vectorlint doc.md --quiet
+```
+
+### Multiple Files
+
+```bash
+# Output combined results
+vectorlint doc1.md doc2.md doc3.md --output json
+
+# Each file's results in combined structure
+```
+
+### Filtering by Score
+
+```bash
+# Process only low-scoring files
+vectorlint "**/*.md" --output json | jq '.files[] | select(.averageScore < 8.0)'
+```
+
+## Next Steps
+
+- **[Quality Scoring](./quality-scoring)** - How scores are calculated
+- **[Troubleshooting](./troubleshooting)** - Common issues and solutions
+- **[Configuration](./configuration)** - Configuration reference

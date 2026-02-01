@@ -1,0 +1,272 @@
+---
+description: Understanding VectorLint's quality scoring system.
+---
+
+# Quality Scoring
+
+VectorLint scores your content using two different systems: density-based scoring for check rules and rubric-based scoring for judge rules.
+
+## Scoring Overview
+
+| Rule Type | Scoring Method | Score Range | Purpose |
+|-----------|----------------|--------------|----------|
+| **Check** | Error Density | 0-10 | Count violations relative to content length |
+| **Judge** | Rubric Average | 1-10 | Multi-dimensional quality assessment |
+
+## Density-Based Scoring (Check Rules)
+
+Check rules count specific violations and calculate score based on **error density (errors per 100 words)**.
+
+### Calculation
+
+```javascript
+errorCount = number of violations found
+wordCount = total words in content
+errorDensity = (errorCount / wordCount) * 100
+score = 10 - (errorDensity * strictnessMultiplier)
+```
+
+### The "100 vs 1,000" Example
+
+| Document | Words | Errors | Density | Score (Standard) |
+|----------|-------|---------|----------|-------------------|
+| Short | 100 | 1 | 1% | 9.0 |
+| Medium | 500 | 5 | 1% | 9.0 |
+| Long | 1,000 | 10 | 1% | 9.0 |
+
+**Key insight:** Same error density produces same score, regardless of document length.
+
+### Strictness Multipliers
+
+| Level | Value | Multiplier | Penalty per 1% Density |
+|-------|--------|-------------|----------------------|
+| **lenient** | 1-3 | 5 | 5 points |
+| **standard** | 4-7 | 10 | 10 points |
+| **strict** | 8-10 | 20 | 20 points |
+
+### Score Table
+
+| Density | Lenient | Standard | Strict |
+|---------|----------|----------|--------|
+| 0% (no errors) | 10.0 | 10.0 | 10.0 |
+| 0.1% | 9.5 | 9.0 | 8.0 |
+| 0.25% | 8.8 | 7.5 | 5.0 |
+| 0.5% | 7.5 | 5.0 | 0.0 |
+| 1.0% | 5.0 | 0.0 | -10.0 |
+| 2.0% | 0.0 | -10.0 | -30.0 |
+
+**Note:** Scores are clamped at 0.0 minimum.
+
+### Example: Grammar Checker
+
+```bash
+# Short document (100 words, 1 error)
+Grammar Checker            █████████░░░ 9.0/10
+✗ Grammar error on line 15
+
+# Long document (1,000 words, 10 errors, same density)
+Grammar Checker            █████████░░░ 9.0/10
+✗ Grammar error on line 15
+✗ Grammar error on line 42
+[... 8 more errors ...]
+
+# Both get 9.0/10 because they have same error density (1%)
+```
+
+## Rubric-Based Scoring (Judge Rules)
+
+Judge rules use a 1-4 rubric scale, normalized to a 1-10 scale, with weighted averages.
+
+### Normalization Formula
+
+```javascript
+// Convert 1-4 scale to 1-10 scale
+normalizedScore = 1 + ((rating - 1) / 3) * 9
+```
+
+| Rating | Meaning | Normalized Score |
+|--------|----------|-----------------|
+| **4** (Excellent) | Highest quality | **10.0** |
+| **3** (Good) | Above average | **7.0** |
+| **2** (Fair) | Below average | **4.0** |
+| **1** (Poor) | Lowest quality | **1.0** |
+
+### Weighted Average Calculation
+
+```javascript
+finalScore = (Σ (normalizedScore × weight)) / (Σ weight)
+```
+
+### Example: Headline Evaluator
+
+```yaml
+criteria:
+  - name: Value Communication
+    id: ValueCommunication
+    weight: 12
+  - name: Curiosity Gap
+    id: CuriosityGap
+    weight: 2
+```
+
+**Ratings:**
+- Value Communication: 3 (Good) → 7.0 normalized
+- Curiosity Gap: 4 (Excellent) → 10.0 normalized
+
+**Calculation:**
+```
+Weighted Sum = (7.0 × 12) + (10.0 × 2) = 84 + 20 = 104
+Total Weight = 12 + 2 = 14
+Final Score = 104 / 14 = 7.43
+```
+
+### Weight Impact Example
+
+| Criterion | Weight | Rating | Normalized | Weighted Points |
+|-----------|--------|--------|-------------|----------------|
+| Clarity | 30 | 3 (Good) | 7.0 | 210 |
+| Accuracy | 40 | 4 (Excellent) | 10.0 | 400 |
+| Completeness | 20 | 2 (Fair) | 4.0 | 80 |
+| Engagement | 10 | 3 (Good) | 7.0 | 70 |
+| **Total** | **100** | | | **760** |
+| **Final Score** | | | | **7.6** |
+
+## Score Thresholds
+
+### Common Thresholds
+
+| Score | Quality | Action |
+|-------|----------|---------|
+| **9.0-10.0** | Excellent | Ready for production |
+| **7.0-8.9** | Good | Minor improvements needed |
+| **5.0-6.9** | Fair | Needs revision |
+| **0.0-4.9** | Poor | Significant work needed |
+
+### Setting Quality Gates
+
+In `.vectorlint.ini`, use severity to enforce thresholds:
+
+```ini
+# High-quality gate for published content
+[content/published/**/*.md]
+RunRules=ProductionRules
+DefaultSeverity=error  # Any violation blocks deployment
+
+# Lenient gate for drafts
+[content/drafts/**/*.md]
+RunRules=DraftRules
+DefaultSeverity=warning  # Allow some issues
+```
+
+## Interpreting Scores
+
+### Check Rule Scores
+
+| Score | Meaning | What It Tells You |
+|-------|----------|-----------------|
+| **10.0** | No errors found | Content passes with flying colors |
+| **8.0-9.9** | Very few errors | High quality content |
+| **5.0-7.9** | Moderate errors | Needs some fixes |
+| **0.0-4.9** | Many errors | Requires major revision |
+
+### Judge Rule Scores
+
+| Score | Meaning | What It Tells You |
+|-------|----------|-----------------|
+| **9.0-10.0** | Excellent | Content meets all quality standards |
+| **7.0-8.9** | Good | Minor improvements would help |
+| **4.0-6.9** | Fair | Several areas need work |
+| **1.0-3.9** | Poor | Significant quality issues |
+
+## Tracking Quality Over Time
+
+### Establish Baselines
+
+Run VectorLint regularly to track quality trends:
+
+```bash
+# Check quality weekly
+vectorlint "**/*.md" --output json > quality-weekly-$(date +%Y-%m-%d).json
+```
+
+### Compare Versions
+
+```javascript
+const week1 = JSON.parse(fs.readFileSync('quality-week-2026-01-01.json'));
+const week2 = JSON.parse(fs.readFileSync('quality-week-2026-01-08.json'));
+
+const avg1 = calculateAverage(week1);
+const avg2 = calculateAverage(week2);
+
+console.log(`Week 1: ${avg1}/10`);
+console.log(`Week 2: ${avg2}/10`);
+console.log(`Change: ${(avg2 - avg1).toFixed(2)}`);
+```
+
+### Quality Metrics Dashboard
+
+Track these metrics over time:
+
+| Metric | How to Calculate | Why It Matters |
+|---------|----------------|-----------------|
+| **Average Score** | Sum of all scores / count | Overall quality trend |
+| **Pass Rate** | Files with score ≥ 8.0 / total files | Production readiness |
+| **Error Density** | Total errors / total words | Technical accuracy |
+| **Rule-Specific Scores** | Average per rule | Identify problem areas |
+
+## Practical Tips
+
+### 1. Set Realistic Thresholds
+
+Different content types have different quality expectations:
+
+```ini
+# Published documentation
+[docs/published/**/*.md]
+GrammarChecker.strictness=strict
+
+# Internal notes
+[docs/notes/**/*.md]
+GrammarChecker.strictness=lenient
+```
+
+### 2. Use Score for Prioritization
+
+```bash
+# Find content needing most attention
+vectorlint "**/*.md" --output json |
+  jq '.files[] | select(.averageScore < 7.0) | .path' |
+  sort
+```
+
+### 3. Combine Score Types
+
+Both scoring types provide different insights:
+
+- **Density-based**: Objective, countable issues (grammar, links, code)
+- **Rubric-based**: Subjective quality assessments (engagement, clarity)
+
+Use both for comprehensive quality picture.
+
+### 4. Score Stability
+
+Test rule consistency by running same content multiple times:
+
+```bash
+# Test consistency
+for i in {1..5}; do
+  vectorlint sample.md --output json > run-$i.json
+done
+
+# Check variance
+jq -s '.[].files[].averageScore' run-*.json
+```
+
+Low variance = consistent scoring = reliable rule.
+
+## Next Steps
+
+- **[Output Formats](./output-formats)** - Understanding output types
+- **[Rule Anatomy](./rule-anatomy)** - Rule configuration
+- **[Check Rules](./check-rules)** - Density scoring rules
+- **[Judge Rules](./judge-rules)** - Rubric scoring rules

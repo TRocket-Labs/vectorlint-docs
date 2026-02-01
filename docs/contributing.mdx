@@ -1,0 +1,368 @@
+---
+description: How to contribute to VectorLint.
+---
+
+# Contributing
+
+We welcome contributions to VectorLint! Whether it's bug fixes, new features, or documentation improvements, we appreciate your help.
+
+## Ways to Contribute
+
+| Type | Description | How to Start |
+|-------|-------------|---------------|
+| **Bug Reports** | Report issues you've found | [Open an issue](#reporting-bugs) |
+| **Feature Requests** | Suggest new features or improvements | [Open an issue](#feature-requests) |
+| **Code Contributions** | Submit pull requests with bug fixes or features | See [Pull Requests](#pull-requests) |
+| **Documentation** | Improve docs, fix typos, add examples | [Submit docs PR](#documentation) |
+| **Rules** | Share custom rules with the community | See [Sharing Rules](#sharing-rules) |
+
+## Reporting Bugs
+
+### Before Reporting
+
+1. **Search existing issues:**
+   - Check if your issue is already reported
+   - Add information to existing issue instead of creating new one
+
+2. **Reproduce the bug:**
+   - Verify it's reproducible
+   - Document exact steps to reproduce
+
+3. **Check recent changes:**
+   - Try latest version
+   - Bug may already be fixed in main branch
+
+### Issue Template
+
+```markdown
+## Bug Description
+
+Clear, concise description of what the bug is.
+
+## To Reproduce
+
+Steps to reproduce the behavior:
+
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
+
+## Expected Behavior
+
+What you expected to happen.
+
+## Actual Behavior
+
+What actually happened.
+
+## Environment
+
+- VectorLint version: `vectorlint --version`
+- OS: [e.g., macOS 14, Ubuntu 22.04, Windows 11]
+- LLM Provider: [OpenAI, Anthropic, etc.]
+- Config: [Relevant parts of .vectorlint.ini]
+
+## Logs/Error Messages
+
+```bash
+# Include error output
+vectorlint doc.md
+```
+
+## Additional Context
+
+Any other relevant information, screenshots, or sample files.
+```
+
+## Feature Requests
+
+### Guidelines
+
+1. **Search existing requests:**
+   - Avoid duplicate feature requests
+   - Add use case to existing request
+
+2. **Be specific:**
+   - Describe what you want to do
+   - Explain why current functionality doesn't meet needs
+
+3. **Provide context:**
+   - Use case or problem you're solving
+   - Potential impact on other users
+
+### Feature Request Template
+
+```markdown
+## Feature Description
+
+Clear description of the feature.
+
+## Problem or Use Case
+
+What problem does this feature solve? What's your use case?
+
+## Proposed Solution
+
+How should this feature work? Include details or mockups if helpful.
+
+## Alternatives Considered
+
+What alternatives have you considered? Why are they insufficient?
+
+## Additional Context
+
+Any other relevant information, screenshots, or examples.
+```
+
+## Pull Requests
+
+### Setting Up Development Environment
+
+1. **Fork and clone:**
+   ```bash
+   gh repo fork TRocket-Labs/vectorlint
+   git clone https://github.com/YOUR_USERNAME/vectorlint.git
+   cd vectorlint
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Run tests:**
+   ```bash
+   npm test
+   ```
+
+4. **Build locally:**
+   ```bash
+   npm run build
+   npm start --help
+   ```
+
+### Development Workflow
+
+1. **Create feature branch:**
+   ```bash
+   git checkout -b feature/your-feature-name
+   # or
+   git checkout -b fix/your-bug-fix
+   ```
+
+2. **Make changes:**
+   - Write code following project conventions
+   - Add tests for new functionality
+   - Update documentation as needed
+
+3. **Run tests:**
+   ```bash
+   npm run test:run
+   npm run lint
+   ```
+
+4. **Commit changes:**
+   ```bash
+   git add .
+   git commit -m "Add feature: brief description"
+   ```
+
+5. **Push and create PR:**
+   ```bash
+   git push origin feature/your-feature-name
+   gh pr create
+   ```
+
+### Code Style
+
+**TypeScript:**
+- Use 2-space indentation
+- Follow existing naming conventions
+- Add JSDoc comments for public APIs
+- No `any` types - use specific types
+
+**Testing:**
+- Write tests for new functionality
+- Use `vitest` testing framework
+- Mock LLM providers in tests
+- Don't hit network in unit tests
+
+### Commit Message Style
+
+**Subject Line:**
+- Imperative mood: "Add" not "Added"
+- Max 72 characters
+- Describe what changed, not why
+
+**Body:**
+- List what changed
+- Explain why (if not obvious)
+- Reference issue numbers
+
+**Example:**
+```bash
+git commit -m "Fix: Handle empty content in check rules" -m "
+- Add validation for empty files
+- Return appropriate error message
+- Fixes #123"
+```
+
+### Pull Request Checklist
+
+Before submitting PR:
+
+- [ ] Code passes linting (`npm run lint`)
+- [ ] All tests pass (`npm run test:run`)
+- [ ] Tests added for new functionality
+- [ ] Documentation updated (if needed)
+- [ ] Commit messages follow convention
+- [ ] PR description includes motivation and testing
+
+## Documentation
+
+### Improving Documentation
+
+Documentation files are in `/docs/` directory:
+
+1. **Fork and clone:**
+   ```bash
+   gh repo fork TRocket-Labs/vectorlint-docs
+   git clone https://github.com/YOUR_USERNAME/vectorlint-docs.git
+   cd vectorlint-docs
+   ```
+
+2. **Make changes:**
+   - Edit or create `.mdx` files
+   - Follow Mintlify format
+   - Include examples and code blocks
+
+3. **Test locally:**
+   ```bash
+   # Use Mintlify CLI or preview
+   mintlify dev
+   ```
+
+4. **Submit PR:**
+   ```bash
+   git add .
+   git commit -m "docs: Add troubleshooting section"
+   git push origin main
+   gh pr create
+   ```
+
+### Documentation Guidelines
+
+- **Be clear and concise**
+- **Include examples** for all commands and configurations
+- **Use code blocks** with syntax highlighting
+- **Link to related docs** where relevant
+- **Add frontmatter** to all pages with title and description
+
+## Sharing Rules
+
+Share your custom rules with the community:
+
+### Create Rule Pack
+
+1. **Organize rules in directory:**
+   ```
+   your-rule-pack/
+   ├── grammar-checker.md
+   ├── tone-analyzer.md
+   └── readability-assessor.md
+   ```
+
+2. **Document usage:**
+   - Add README.md explaining what rules do
+   - Include examples of output
+   - Document any configuration options
+
+3. **Publish:**
+   - Create GitHub repository with rule pack
+   - Add descriptive README
+   - Use clear naming (e.g., `vectorlint-rules-technical-docs`)
+
+### Submit for Inclusion
+
+If you'd like your rules included in VectorLint:
+
+1. **Add link to existing issue** or create new one
+2. **Provide:**
+   - Repository URL
+   - Description of what rules do
+   - Intended use case
+3. **We'll review and potentially:**
+   - Add to documentation
+   - Include in presets
+   - Link from README
+
+## Code of Conduct
+
+### Be Respectful
+
+- Treat all contributors with respect
+- Welcome newcomers and help them learn
+- Assume good intentions
+
+### Be Constructive
+
+- Focus on what's best for the project
+- Provide feedback in a helpful, non-condescending way
+- Discuss technical merits, not individuals
+
+### Be Inclusive
+
+- Use inclusive language
+- Welcome contributions from everyone
+- Encourage diverse perspectives
+
+## Development Priorities
+
+Current priorities for VectorLint:
+
+| Priority | Area | Description |
+|-----------|--------|----------|
+| **High** | Core linter | Performance, reliability, LLM integration |
+| **High** | Configuration | Ease of setup, clear error messages |
+| **Medium** | Rules | Better default rules, more examples |
+| **Medium** | Documentation | Coverage, clarity, examples |
+| **Low** | IDE integration | VS Code extension, other editors |
+
+Check [GitHub Issues](https://github.com/TRocket-Labs/vectorlint/issues) for current roadmap.
+
+## Recognition
+
+Contributors are recognized in:
+
+- **Contributors section** in README
+- **CHANGELOG.md** for significant features
+- **Release notes** for major versions
+
+Your contributions matter and help make VectorLint better for everyone!
+
+## Getting Help
+
+### Community Channels
+
+- **GitHub Discussions:** Ask questions, share ideas
+- **GitHub Issues:** Report bugs, request features
+- **Discord:** [Link to community Discord, if available]
+
+### Questions Before Contributing
+
+If you're unsure where to start:
+
+1. Check [existing issues](https://github.com/TRocket-Labs/vectorlint/issues)
+2. Ask in [GitHub Discussions](https://github.com/TRocket-Labs/vectorlint/discussions)
+3. Start with documentation contributions (easiest way to contribute)
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the same license as VectorLint (Apache 2.0).
+
+## Next Steps
+
+- **[Installation](./installation)** - Get started with VectorLint
+- **[Troubleshooting](./troubleshooting)** - Common issues
+- **[GitHub Repository](https://github.com/TRocket-Labs/vectorlint)** - View source code

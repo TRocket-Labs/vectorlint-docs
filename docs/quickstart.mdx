@@ -1,0 +1,197 @@
+---
+description: Get started with VectorLint in minutes using zero-config mode or full setup.
+---
+
+# Quick Start
+
+Get started with VectorLint in minutes.
+
+## Zero-Config Mode (Fastest)
+
+If you just want to check content against a style guide without setting up rule packs:
+
+<Tabs>
+  <Tab label="Step 1: Initialize">
+    Run the initialization command:
+
+    ```bash
+    vectorlint init --quick
+    ```
+
+    This creates a `VECTORLINT.md` file in your project root.
+  </Tab>
+  <Tab label="Step 2: Add Style Guide">
+    Open `VECTORLINT.md` and paste your style guide:
+
+    ```markdown
+    # TinyRocket Style Guide
+
+    ## Tone
+
+    - Write in a conversational, friendly tone
+    - Avoid jargon unless explaining technical concepts
+    - Use active voice
+
+    ## Structure
+
+    - Start with a clear H1 heading
+    - Use short paragraphs (2-3 sentences)
+    - Include practical examples
+    ```
+  </Tab>
+  <Tab label="Step 3: Configure API Keys">
+    Open `~/.vectorlint/config.toml` (created by `init`) and uncomment your LLM provider:
+
+    ```toml
+    [env]
+    LLM_PROVIDER = "openai"
+    OPENAI_API_KEY = "sk-..."
+    ```
+
+    You can also use Anthropic, Gemini, or Azure.
+  </Tab>
+  <Tab label="Step 4: Lint Content">
+    Run VectorLint on your content:
+
+    ```bash
+    vectorlint doc.md
+    ```
+
+    You'll see quality scores and specific issues found.
+  </Tab>
+</Tabs>
+
+That's it! VectorLint will automatically:
+1. Detect your `VECTORLINT.md` file
+2. Create a synthetic "Style Guide Compliance" rule
+3. Evaluate your content against it
+
+## Full Configuration (For Teams)
+
+For comprehensive setup with custom rule packs and project-specific settings:
+
+<Tabs>
+  <Tab label="Step 1: Initialize">
+    Run the full initialization:
+
+    ```bash
+    vectorlint init
+    ```
+
+    This creates:
+    - **`.vectorlint.ini`**: Project-specific settings
+    - **`~/.vectorlint/config.toml`**: LLM provider API keys
+    - **`VECTORLINT.md`**: Global style guide
+    - **Pre-configured rule packs** (optional)
+  </Tab>
+  <Tab label="Step 2: Configure API Keys">
+    Open `~/.vectorlint/config.toml` and configure your LLM provider:
+
+    ```toml
+    [env]
+    LLM_PROVIDER = "openai"
+    OPENAI_API_KEY = "sk-..."
+
+    # Alternative providers:
+    # LLM_PROVIDER = "anthropic"
+    # ANTHROPIC_API_KEY = "sk-ant-..."
+    ```
+  </Tab>
+  <Tab label="Step 3: Review Project Config">
+    Check the generated `.vectorlint.ini`:
+
+    ```ini
+    # Global settings
+    Concurrency=4
+    DefaultSeverity=warning
+
+    # File patterns and rules
+    [**/*.md]
+    RunRules=VectorLint
+    ```
+  </Tab>
+  <Tab label="Step 4: Lint Content">
+    Run VectorLint:
+
+    ```bash
+    # Lint a single file
+    vectorlint doc.md
+
+    # Lint all markdown files
+    vectorlint "**/*.md"
+
+    # Lint a specific directory
+    vectorlint content/docs
+    ```
+  </Tab>
+</Tabs>
+
+## Understanding the Output
+
+VectorLint output includes:
+
+| Element | Description |
+|---------|-------------|
+| **Overall Score** | Quality score (1-10) for each rule |
+| **Severity** | `error` (red) or `warning` (yellow) |
+| **Location** | File path and specific issue location |
+| **Issues** | List of specific problems found |
+| **Suggestions** | Actionable recommendations |
+
+Example output:
+
+```bash
+✓ Checking content/docs/intro.md...
+
+Grammar Checker            ████████████ 9.0/10
+✓ No issues found
+
+Headline Evaluator          █████████░░░ 6.7/10
+⚠ Missing value proposition
+  → Line 1: "Introduction"
+  → Suggestion: Add benefit or outcome to the headline
+
+AI Pattern Detector         ████████████ 10.0/10
+✓ Content appears human-written
+```
+
+## Common Commands
+
+```bash
+# View all options
+vectorlint --help
+
+# Check a specific file
+vectorlint path/to/file.md
+
+# Check multiple files
+vectorlint doc1.md doc2.md doc3.md
+
+# Use a glob pattern
+vectorlint "content/**/*.md"
+
+# Output as JSON
+vectorlint doc.md --output json
+
+# Run with higher concurrency (faster but more API calls)
+vectorlint doc.md --concurrency 8
+```
+
+## Next Steps
+
+- **[Configuration](./configuration)** - Learn about all configuration options
+- **[Creating Rules](./rule-anatomy)** - Build custom quality checks
+- **[Project Config](./project-config)** - Advanced project setup
+
+## Zero-Config vs Full Configuration
+
+| Feature | Zero-Config | Full Configuration |
+|---------|-------------|-------------------|
+| Setup time | 2 minutes | 10 minutes |
+| Custom rules | ❌ | ✅ |
+| Multiple rule packs | ❌ | ✅ |
+| File pattern mapping | ❌ | ✅ |
+| Strictness control | ❌ | ✅ |
+| Search provider support | ❌ | ✅ |
+
+Start with zero-config mode for quick wins, then upgrade to full configuration as your needs grow.

@@ -1,0 +1,260 @@
+---
+description: Understand the structure of VectorLint rules.
+---
+
+# Rule Anatomy
+
+VectorLint rules are Markdown files with YAML frontmatter that define how your content should be assessed. They're quality checks powered by LLMs instead of regex patterns.
+
+## Rule Structure
+
+Every VectorLint rule has two parts:
+
+```markdown
+---
+# YAML Frontmatter (Configuration)
+evaluator: base
+type: check
+id: GrammarChecker
+name: Grammar Checker
+severity: error
+---
+
+# Markdown Body (Instructions for the LLM)
+
+Your detailed instructions for the LLM go here...
+```
+
+### Frontmatter
+
+The YAML section at the top of the file configures the rule's behavior:
+
+| Field | Type | Required | Description |
+|-------|------|-----------|-------------|
+| `specVersion` | string | No | Rule specification version (use `1.0.0`) |
+| `evaluator` | string | No | Evaluator type: `base`, `technical-accuracy` (default: `base`) |
+| `type` | string | No | Mode: `check` or `judge` (default: `check`) |
+| `id` | string | **Yes** | Unique identifier (used in error reporting) |
+| `name` | string | **Yes** | Human-readable name |
+| `severity` | string | No | `error` or `warning` (default: `warning`) |
+| `evaluateAs` | string | No | `document` or `chunk` (default: `chunk`) |
+| `target` | object | No | Content matching specification |
+| `criteria` | array | **Yes\*** | Evaluation criteria (required for judge rules) |
+
+### Markdown Body
+
+The content after the frontmatter is the **prompt** that instructs the LLM how to evaluate your content. This is where you define:
+
+- What to check for
+- How to score violations
+- What constitutes good vs. bad content
+- Any context or examples to guide the evaluation
+
+## Rule Types
+
+VectorLint uses a single **Base Evaluator** (`evaluator: base`) that operates in two distinct modes:
+
+| Mode | `type` | Use Case | Scoring | Output |
+|-------|---------|-----------|----------|---------|
+| **Check** | `check` | Pass/fail checks, counting violations | Density-based | List of specific issues |
+| **Judge** | `judge` | Multi-dimensional quality scoring | 1-4 rubric scale | Weighted average score |
+
+## File Organization
+
+### Rule Packs
+
+Organize rules into **pack subdirectories** within `RulesPath`:
+
+```
+project/
+├── .github/
+│   └── rules/
+│       ├── Acme/                    ← Company style guide pack
+│       │   ├── grammar-checker.md
+│       │   ├── headline-evaluator.md
+│       │   └── Technical/           ← Nested organization supported
+│       │       └── technical-accuracy.md
+│       └── TechCorp/                ← Another company's style guide
+│           └── brand-voice.md
+```
+
+**Pack Naming:** Use company names (e.g., `Acme`, `TechCorp`, `Stripe`) to indicate which style guide the rules implement.
+
+### Loading Rules
+
+VectorLint recursively loads all `.md` files from within each pack:
+
+```ini
+# .vectorlint.ini
+RulesPath=.github/rules
+
+[**/*.md]
+RunRules=Acme
+```
+
+This loads all rules from `.github/rules/Acme/` and runs them on matching files.
+
+## Complete Rule Example
+
+```markdown
+---
+specVersion: 1.0.0
+evaluator: base
+type: judge
+id: HeadlineEvaluator
+name: Headline Evaluator
+
+severity: error
+criteria:
+  - name: Value Communication
+    id: ValueCommunication
+    weight: 12
+  - name: Curiosity Gap
+    id: CuriosityGap
+    weight: 2
+---
+
+You are a headline evaluator. Assess the H1 headline for:
+
+1. **Value Communication** (12 points): Does it clearly state what the reader gains?
+2. **Curiosity Gap** (2 points): Does it create interest without being clickbait?
+
+For each criterion, provide:
+- A score from 1-4
+- Specific examples from the headline supporting your score
+- Suggestions for improvement if below 4
+
+## RUBRIC
+
+# Value Communication <weight=12>
+
+### Excellent <score=4>
+
+Specific, immediately appealing benefit clearly stated. Reader knows exactly what they'll get.
+
+**Examples:**
+- "Build a REST API in 10 Minutes"
+- "Reduce AWS Costs by 50% with These 3 Tips"
+
+### Good <score=3>
+
+Clear benefit but less specific impact or slightly vague.
+
+**Examples:**
+- "Build APIs Faster"
+- "Save Money on Cloud Infrastructure"
+
+### Fair <score=2>
+
+Generic or vague benefit. Reader unsure of outcome.
+
+**Examples:**
+- "API Development Guide"
+- "Cloud Cost Optimization"
+
+### Poor <score=1>
+
+No benefit communicated. Reader doesn't know what they'll gain.
+
+**Examples:**
+- "Introduction to APIs"
+- "Understanding Cloud Costs"
+
+# Curiosity Gap <weight=2>
+
+### Excellent <score=4>
+
+Creates natural curiosity without being misleading. Reader wants to know "how."
+
+**Examples:**
+- "How We Reduced API Latency by 80%"
+- "The Database Optimization That Saved Us $10K"
+
+### Good <score=3>
+
+Interesting but less compelling curiosity.
+
+**Examples:**
+- "API Latency Optimization"
+- "Database Cost Savings"
+
+### Fair <score=2>
+
+Mild interest or standard topic.
+
+**Examples:**
+- "Improving API Performance"
+- "Database Optimization Tips"
+
+### Poor <score=1>
+
+No curiosity created. Standard or boring.
+
+**Examples:**
+- "API Performance"
+- "Database Maintenance"
+```
+
+## Rule Best Practices
+
+### 1. Use Clear IDs
+
+Use PascalCase for rule and criterion IDs:
+
+```yaml
+id: GrammarChecker
+criteria:
+  - id: SpellingErrors
+  - id: PunctuationIssues
+```
+
+### 2. Name Rules Descriptively
+
+Make names clear and self-documenting:
+
+❌ **Bad:**
+```yaml
+id: Rule1
+name: Check content
+```
+
+✅ **Good:**
+```yaml
+id: GrammarChecker
+name: Grammar Checker
+```
+
+### 3. Provide Context
+
+Include relevant context in your prompt:
+
+```markdown
+## CONTEXT
+
+**Developer Audience**: Software engineers who value:
+- Technical precision over marketing fluff
+- Practical examples over theory
+```
+
+### 4. Be Specific with Instructions
+
+Tell the LLM exactly what to check:
+
+❌ **Bad:**
+```markdown
+Check if the headline is good.
+```
+
+✅ **Good:**
+```markdown
+Assess whether the headline clearly communicates a specific benefit
+to the reader. A good headline states exactly what the reader will gain.
+```
+
+## Next Steps
+
+- **[Check Rules](./check-rules)** - Learn about pass/fail rules
+- **[Judge Rules](./judge-rules)** - Learn about scoring rules
+- **[Target Specification](./target-specification)** - Target specific content sections
+- **[Best Practices](./best-practices)** - Advanced prompt writing
+- **[Examples](./examples)** - Practical rule examples

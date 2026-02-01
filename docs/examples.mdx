@@ -1,0 +1,467 @@
+---
+description: Practical examples of VectorLint rules for check and judge types.
+---
+
+# Examples
+
+Practical rule examples you can adapt for your own content quality needs.
+
+## Check Rule Examples
+
+### Example 1: Grammar Checker
+
+```markdown
+---
+evaluator: base
+type: check
+id: GrammarChecker
+name: Grammar Checker
+severity: error
+strictness: standard
+---
+
+Check this content for grammar issues, spelling errors, and punctuation mistakes.
+
+For each error found, provide:
+- The specific text with error
+- Line number where it occurs
+- The correct version or suggestion
+- Type of error (grammar, spelling, punctuation)
+
+## COMMON ISSUES TO CHECK
+
+- Subject-verb agreement
+- Run-on sentences
+- Missing or incorrect punctuation
+- Confusing word choices
+- Passive voice where active is clearer
+```
+
+### Example 2: Link Validator
+
+```markdown
+---
+evaluator: base
+type: check
+id: LinkValidator
+name: Link Validator
+severity: warning
+strictness: lenient
+---
+
+Check this content for link issues.
+
+For each issue found, provide:
+- The link text or URL
+- Line number
+- Type of issue:
+  - Missing protocol (no http:// or https://)
+  - Malformed URL
+  - Broken link (if you can verify)
+  - HTTP instead of HTTPS (security risk)
+- Suggestion for fix
+
+## CHECK LIST
+
+- All links have http:// or https://
+- URLs are properly formatted
+- No broken links (if verifiable)
+- HTTPS preferred over HTTP
+- No URL shorteners in documentation
+```
+
+### Example 3: Terminology Consistency
+
+```markdown
+---
+evaluator: base
+type: check
+id: TerminologyChecker
+name: Terminology Checker
+severity: warning
+strictness: standard
+---
+
+Check this content for consistent and correct terminology.
+
+## REQUIRED TERMINOLOGY
+
+- Use "user" not "customer" or "client"
+- Use "developer" not "programmer" or "coder"
+- Use "application" not "app" (in headings)
+- Use "documentation" not "docs" (in headings)
+- Use "repository" not "repo" (in headings)
+
+For each terminology issue found, provide:
+- The incorrect term used
+- Line number
+- Correct term from required list
+- Context showing where it was used
+
+## EXCLUSIONS
+
+Ignore these contexts:
+- Code comments
+- String literals in code examples
+- User quotes or testimonials
+```
+
+### Example 4: Code Block Checker
+
+```markdown
+---
+evaluator: base
+type: check
+id: CodeBlockChecker
+name: Code Block Checker
+severity: error
+---
+
+Check this content for issues in code blocks.
+
+For each issue found, provide:
+- Language of code block (if identifiable)
+- Line number of code block
+- Type of issue:
+  - Syntax errors
+  - Missing language identifier
+  - Unclear or commented-out code
+  - Security vulnerabilities
+- Suggestion for fix
+
+## CHECK LIST
+
+- All code blocks have language identifier
+- Code is not commented out
+- No security issues (hardcoded secrets, SQL injection risks)
+- Code appears executable
+- Syntax is correct for specified language
+```
+
+## Judge Rule Examples
+
+### Example 1: Headline Evaluator
+
+```markdown
+---
+specVersion: 1.0.0
+evaluator: base
+type: judge
+id: HeadlineEvaluator
+name: Headline Evaluator
+
+severity: error
+target:
+  regex: '^#\s+(.+)$'
+  flags: "mu"
+  group: 1
+  required: true
+  suggestion: Add an H1 headline for the article.
+criteria:
+  - name: Value Communication
+    id: ValueCommunication
+    weight: 12
+  - name: Curiosity Gap
+    id: CuriosityGap
+    weight: 2
+---
+
+You are a headline evaluator for developer-focused content. Assess the H1 headline.
+
+## RUBRIC
+
+# Value Communication <weight=12>
+
+### Excellent <score=4>
+
+Specific, immediately appealing benefit clearly stated. Reader knows exactly what they'll gain.
+
+**Examples:**
+- "Build a REST API in 10 Minutes"
+- "Reduce AWS Costs by 50% with These 3 Tips"
+- "Secure Your Node.js App Against Common Vulnerabilities"
+
+### Good <score=3>
+
+Clear benefit but less specific impact or slightly vague.
+
+**Examples:**
+- "Build APIs Faster"
+- "Save Money on Cloud Infrastructure"
+- "Improve Application Security"
+
+### Fair <score=2>
+
+Generic or vague benefit. Reader unsure of outcome.
+
+**Examples:**
+- "API Development Guide"
+- "Cloud Cost Optimization"
+- "Security Best Practices"
+
+### Poor <score=1>
+
+No benefit communicated. Reader doesn't know what they'll gain.
+
+**Examples:**
+- "Introduction to APIs"
+- "Understanding Cloud Costs"
+- "Application Security Overview"
+
+# Curiosity Gap <weight=2>
+
+### Excellent <score=4>
+
+Creates natural curiosity without being misleading. Reader wants to know "how."
+
+**Examples:**
+- "How We Reduced API Latency by 80%"
+- "The Database Optimization That Saved Us $10K"
+- "Why Our GraphQL Schema Failed (And What We Did)"
+
+### Good <score=3>
+
+Interesting but less compelling curiosity.
+
+**Examples:**
+- "API Latency Optimization"
+- "Database Cost Savings"
+- "GraphQL Schema Design"
+
+### Fair <score=2>
+
+Mild interest or standard topic.
+
+**Examples:**
+- "Improving API Performance"
+- "Database Optimization Tips"
+- "GraphQL Schema Guide"
+
+### Poor <score=1>
+
+No curiosity created. Standard or boring.
+
+**Examples:**
+- "API Performance"
+- "Database Maintenance"
+- "GraphQL Schema"
+```
+
+### Example 2: Content Quality Assessor
+
+```markdown
+---
+specVersion: 1.0.0
+evaluator: base
+type: judge
+id: ContentQuality
+name: Content Quality Assessor
+
+severity: warning
+criteria:
+  - name: Clarity
+    id: Clarity
+    weight: 30
+  - name: Engagement
+    id: Engagement
+    weight: 25
+  - name: Completeness
+    id: Completeness
+    weight: 25
+  - name: Accuracy
+    id: Accuracy
+    weight: 20
+---
+
+Assess this technical documentation for quality across four dimensions.
+
+## CONTEXT
+
+**Target Audience**: Software engineers and developers
+
+**Quality Standards**:
+- Technical precision is valued over marketing language
+- Practical examples over theoretical explanations
+- Code-first documentation approach
+- Assume reader has basic technical knowledge
+```
+
+[... continue with full rubric for each criterion ...]
+
+### Example 3: Technical Accuracy Verifier
+
+```markdown
+---
+specVersion: 1.0.0
+evaluator: technical-accuracy
+type: judge
+id: TechAccuracy
+name: Technical Accuracy Verifier
+
+severity: error
+criteria:
+  - name: Correctness
+    id: Correctness
+    weight: 40
+  - name: Currency
+    id: Currency
+    weight: 30
+  - name: Completeness
+    id: Completeness
+    weight: 30
+---
+
+Verify the technical accuracy of this content by searching for current information.
+
+## RUBRIC
+
+# Correctness <weight=40>
+
+### Excellent <score=4>
+
+All technical information is accurate and verified.
+
+### Good <score=3>
+
+Mostly accurate with minor issues or edge cases.
+
+### Fair <score=2>
+
+Several inaccuracies or outdated information.
+
+### Poor <score=1>
+
+Multiple significant errors or completely outdated.
+
+# Currency <weight=30>
+
+### Excellent <score=4>
+
+All information is current and reflects latest versions.
+
+### Good <score=3>
+
+Mostly current with minor outdated references.
+
+### Fair <score=2>
+
+Several references to outdated versions or deprecated approaches.
+
+### Poor <score=1>
+
+Significantly outdated content.
+
+# Completeness <weight=30>
+
+### Excellent <score=4>
+
+Comprehensive coverage. No obvious gaps.
+
+### Good <score=3>
+
+Good coverage with minor gaps.
+
+### Fair <score=2>
+
+Several gaps in coverage or missing key concepts.
+
+### Poor <score=1>
+
+Significant gaps or incomplete explanations.
+```
+
+## Advanced Examples
+
+### Example 4: SEO Optimizer
+
+```markdown
+---
+specVersion: 1.0.0
+evaluator: base
+type: judge
+id: SEOOptimizer
+name: SEO Optimizer
+
+severity: warning
+criteria:
+  - name: Keyword Optimization
+    id: KeywordOptimization
+    weight: 25
+  - name: Structure Optimization
+    id: StructureOptimization
+    weight: 25
+  - name: Meta Readiness
+    id: MetaReadiness
+    weight: 25
+  - name: Search Intent
+    id: SearchIntent
+    weight: 25
+---
+
+Evaluate this content for SEO optimization.
+
+## TARGET KEYWORDS
+
+Check if content targets relevant keywords naturally:
+- Primary keyword appears in H1
+- Secondary keywords appear in headings
+- Keywords are used naturally, not stuffed
+- Long-tail keywords are included
+
+## RUBRIC
+
+# Keyword Optimization <weight=25>
+
+### Excellent <score=4>
+
+Keywords used naturally in headings, introduction, and throughout content.
+
+### Good <score=3>
+
+Keywords present but could be better distributed or more natural.
+
+### Fair <score=2>
+
+Keywords used unnaturally or missing in key sections.
+
+### Poor <score=1>
+
+Keywords missing or obviously stuffed.
+
+[... continue with full rubric ...]
+```
+
+## Modifying Examples
+
+To adapt these examples for your needs:
+
+### Change Domain
+
+```markdown
+## CONTEXT
+
+**Target Audience**: [Your specific audience]
+
+**Quality Standards**: [Your specific requirements]
+```
+
+### Adjust Criteria
+
+```yaml
+criteria:
+  - name: [Your criterion 1]
+    weight: [Appropriate weight]
+  - name: [Your criterion 2]
+    weight: [Appropriate weight]
+```
+
+### Update Rubric
+
+Define score boundaries specific to your domain and standards.
+
+## Next Steps
+
+- **[Rule Anatomy](./rule-anatomy)** - Rule structure
+- **[Check Rules](./check-rules)** - Pass/fail rules
+- **[Judge Rules](./judge-rules)** - Rubric-based rules
+- **[Best Practices](./best-practices)** - Prompt writing guidelines

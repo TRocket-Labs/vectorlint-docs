@@ -1,0 +1,77 @@
+---
+description: Learn what VectorLint is and how it can help you improve your content quality.
+---
+
+# Introduction
+
+**VectorLint** is a command-line tool that evaluates and scores content using Large Language Models (LLMs). It uses [LLM-as-a-Judge](https://en.wikipedia.org/wiki/LLM-as-a-Judge) to catch terminology, technical accuracy, and style issues that require contextual understanding.
+
+## What VectorLint Does
+
+Unlike traditional linting tools that rely on regex patterns, VectorLint uses the power of LLMs to understand your content in context. This enables sophisticated quality checks that were previously impossible with automated tools.
+
+VectorLint helps you:
+
+- **Check SEO Optimization** - Verify content follows SEO best practices
+- **Detect AI-Generated Content** - Identify artificial writing patterns
+- **Verify Technical Accuracy** - Catch outdated or incorrect technical information
+- **Ensure Tone & Voice Consistency** - Match content to appropriate tone for your audience
+
+If you can write a prompt for it, you can lint it with VectorLint.
+
+## How It Works
+
+VectorLint evaluates your content through **rules** — Markdown files with YAML frontmatter that define quality checks. Each rule is powered by an LLM prompt that assesses your content against specific criteria.
+
+There are two types of rules:
+
+### Check Rules
+Pass/fail checks that count specific violations. Score is calculated based on error density (errors per 100 words).
+
+**Use case:** Finding grammar mistakes, spelling errors, punctuation issues, or any checkable errors.
+
+### Judge Rules
+Multi-dimensional quality scoring on a 1-4 rubric scale (normalized to 1-10). Score is a weighted average of all criteria.
+
+**Use case:** Assessing content quality dimensions like engagement, clarity, flow, completeness, or technical accuracy.
+
+## Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Rule** | A prompt file (`.md`) that defines how content should be evaluated |
+| **Pack** | A collection of related rules organized in a subdirectory (typically named after a company or style guide) |
+| **Criterion** | Individual quality checks within a rule |
+| **Score** | LLM-assigned rating (1-4 scale for judge, density-based for check) |
+| **Severity** | How failures are reported (`error` or `warning`) |
+
+## Quality Scoring
+
+VectorLint scores your content using error density and a rubric-based system, enabling you to measure quality across documentation.
+
+- **Density-Based Scoring:** For errors that can be counted, scores are calculated based on **error density (errors per 100 words)**, making quality assessment fair across documents of any length.
+- **Rubric-Based Scoring:** For more nuanced quality standards like flow and completeness, scores are graded on a 1-4 rubric system and then normalized to a **1-10 scale**.
+
+This gives your team a shared understanding of which content needs attention and helps track improvements over time.
+
+## What Makes VectorLint Different
+
+| Traditional Linters | VectorLint |
+|---------------------|------------|
+| Regex-based patterns | LLM-powered understanding |
+| Limited to text patterns | Contextual understanding of meaning |
+| Single-level severity | Configurable severity per rule |
+| Fixed rule sets | Fully customizable via prompts |
+| No quality scoring | Density-based and rubric-based scoring |
+
+## What's Next
+
+- **[Installation](./installation)** - Get VectorLint up and running
+- **[Quick Start](./quickstart)** - Start linting content in minutes
+- **[Configuration](./configuration)** - Set up your project
+
+## Resources
+
+- [GitHub Repository](https://github.com/TRocket-Labs/vectorlint)
+- [npm Package](https://www.npmjs.com/package/vectorlint)
+- [Contributing](./contributing)

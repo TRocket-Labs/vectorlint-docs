@@ -1,0 +1,351 @@
+---
+description: Use regex to target specific sections of content for evaluation.
+---
+
+# Target Specification
+
+The `target` field allows you to:
+
+1. **Specify which part** of content to evaluate (via regex)
+2. **Require certain content** to exist (e.g., "must have an H1 headline")
+3. **Provide helpful suggestions** when content is missing
+
+## Basic Target
+
+```yaml
+---
+target:
+  regex: '^#\s+(.+)$'  # Match H1 headline
+  flags: "mu"          # Multiline + Unicode
+  group: 1              # Capture group 1 (the headline text)
+  required: true         # Content must match
+  suggestion: Add an H1 headline for the article.
+---
+```
+
+### Target Properties
+
+| Property | Type | Required | Description |
+|-----------|------|-----------|-------------|
+| `regex` | string | **Yes** | Regular expression pattern |
+| `flags` | string | No | Regex flags (default: "gm") |
+| `group` | number | No | Capture group to evaluate (default: 0 - full match) |
+| `required` | boolean | No | Whether content must match (default: false) |
+| `suggestion` | string | No | Error message when `required: true` and no match |
+
+## Behavior
+
+### When `required: true`
+
+- If content matches → Evaluation proceeds normally on matched content
+- If no match → Immediate `error` with the suggestion message
+
+**Example:**
+```yaml
+target:
+  regex: '^#\s+(.+)$'
+  required: true
+  suggestion: Add an H1 headline for the article.
+```
+
+If content has no H1, output:
+```bash
+✗ Headline Evaluator: Missing required content
+  → Add an H1 headline for the article.
+```
+
+### When `required: false` or omitted
+
+- If content matches → Evaluate only the matched content
+- If no match → Evaluate entire content
+
+This is useful for targeting specific sections when they exist.
+
+## Regex Flags
+
+Common flags:
+
+| Flag | Meaning |
+|-------|----------|
+| `g` | Global (find all matches) |
+| `m` | Multiline (`^` and `$` match line boundaries) |
+| `i` | Case insensitive |
+| `u` | Unicode support |
+| `s` | Dot matches newline |
+
+**Combine flags:**
+```yaml
+target:
+  flags: "gim"  # Global, case-insensitive, multiline
+```
+
+## Common Targets
+
+### Target H1 Headline
+
+```yaml
+target:
+  regex: '^#\s+(.+)$'
+  flags: "mu"
+  group: 1
+  required: true
+  suggestion: Add an H1 headline for the article.
+```
+
+**Matches:**
+```markdown
+# Build a REST API in 10 Minutes
+```
+
+**Evaluates:** `Build a REST API in 10 Minutes`
+
+### Target All Headings
+
+```yaml
+target:
+  regex: '^#{1,6}\s+(.+)$'
+  flags: "gm"
+  group: 1
+```
+
+**Matches:**
+```markdown
+# H1 Heading
+## H2 Heading
+### H3 Heading
+```
+
+**Evaluates:** All headings
+
+### Target First Paragraph
+
+```yaml
+target:
+  regex: '^(.+)$'
+  flags: "gm"
+  group: 1
+```
+
+**Note:** This evaluates each line. For first paragraph only, you'd need a more complex pattern.
+
+### Target Code Blocks
+
+```yaml
+target:
+  regex: '```[\w]*\n([\s\S]*?)```'
+  flags: "gm"
+  group: 1
+```
+
+**Matches:**
+```markdown
+```javascript
+const x = 1;
+```
+```
+
+**Evaluates:** Code content only
+
+### Target Links
+
+```yaml
+target:
+  regex: '\[([^\]]+)\]\(([^)]+)\)'
+  flags: "gm"
+  group: 2  # Capture URL only
+```
+
+**Matches:**
+```markdown
+[Link text](https://example.com)
+```
+
+**Evaluates:** `https://example.com` (URLs only)
+
+## Use Cases
+
+### 1. Require Specific Elements
+
+Ensure content includes required sections:
+
+```yaml
+target:
+  regex: '^#+\s+(?:Introduction|Overview|Summary)$'
+  flags: "gm"
+  required: true
+  suggestion: Add an Introduction or Overview section.
+```
+
+### 2. Evaluate Specific Sections
+
+Focus evaluation on certain parts:
+
+```yaml
+# Target only the abstract/intro
+target:
+  regex: '^#+\s+(?:Abstract|Introduction)\s*\n([\s\S]*?)(?=\n#+|$)'
+  flags: "im"
+  group: 1
+```
+
+### 3. Separate Evaluation
+
+Evaluate different parts with different rules:
+
+**Rule 1: Headline only**
+```yaml
+id: HeadlineEvaluator
+target:
+  regex: '^#\s+(.+)$'
+  flags: "m"
+  group: 1
+  required: true
+```
+
+**Rule 2: Body only**
+```yaml
+id: BodyEvaluator
+target:
+  regex: '^#\s+.+\s*\n([\s\S]*)'
+  flags: "m"
+  group: 1
+```
+
+### 4. Validate Structure
+
+Ensure document has proper structure:
+
+```yaml
+# Must have H1
+target:
+  regex: '^#\s+.+$'
+  flags: "m"
+  required: true
+  suggestion: Document must have an H1 heading.
+```
+
+## Advanced Examples
+
+### Target Multiple Patterns
+
+Use alternation for multiple patterns:
+
+```yaml
+target:
+  regex: '^(#\s+.+|##\s+.+)$'
+  flags: "gm"
+```
+
+**Matches:** H1 or H2 headings
+
+### Target with Context
+
+Capture surrounding context:
+
+```yaml
+target:
+  regex: '^#+\s+(.+)$'
+  flags: "gm"
+  group: 1
+```
+
+Then in prompt, analyze context separately.
+
+### Target Nested Content
+
+For nested structures, use more complex patterns:
+
+```yaml
+# Target content under a specific heading
+target:
+  regex: '^#+\s+API Reference\s*\n([\s\S]*?)(?=\n#+|$)'
+  flags: "im"
+  group: 1
+```
+
+**Matches:** Content under "API Reference" heading until next heading.
+
+## Troubleshooting
+
+### Pattern Not Matching
+
+If regex doesn't match expected content:
+
+1. **Test regex separately** using tools like regex101.com
+2. **Check flags** - missing `m` for multiline is common
+3. **Verify group number** - group 0 is full match, group 1 is first capture
+4. **Check for escape sequences** - backslashes in YAML need double escaping
+
+### Target Not Working with Judge Rules
+
+Judge rules evaluate entire content by default. If target isn't working:
+
+1. Ensure `target` is at top level (not inside criteria)
+2. Check that regex actually matches something
+3. Use a simple test pattern first, then refine
+
+### Suggestion Not Showing
+
+If `suggestion` doesn't appear when content is missing:
+
+1. Verify `required: true` is set
+2. Ensure regex pattern is correct
+3. Check that content actually doesn't match
+
+## Best Practices
+
+### 1. Keep Patterns Simple
+
+Start simple, then refine:
+
+```yaml
+# Start with this
+target:
+  regex: '^#\s+.+$'
+
+# Then refine if needed
+target:
+  regex: '^#\s+(?:Build|Create|How to)\s+.+$'
+```
+
+### 2. Use Anchors Appropriately
+
+Anchors (^ and $) ensure pattern matches at specific positions:
+
+```yaml
+# Match only at start of line
+regex: '^#+\s+.+$'
+
+# Match anywhere
+regex: '#+\s+.+$'
+```
+
+### 3. Test Patterns
+
+Before using in production:
+
+```bash
+# Test with grep
+grep -P 'pattern' file.md
+
+# Or use online tools
+# https://regex101.com
+```
+
+### 4. Document Complex Patterns
+
+Add comments to explain complex patterns:
+
+```yaml
+target:
+  # Match code blocks: ```lang to ```
+  regex: '```[\w]*\n([\s\S]*?)```'
+  flags: "gm"
+  group: 1
+```
+
+## Next Steps
+
+- **[Check Rules](./check-rules)** - Pass/fail rules
+- **[Judge Rules](./judge-rules)** - Rubric-based rules
+- **[Rule Anatomy](./rule-anatomy)** - Complete rule structure

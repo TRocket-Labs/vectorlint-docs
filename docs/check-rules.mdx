@@ -1,0 +1,307 @@
+---
+description: Create pass/fail rules that count specific violations.
+---
+
+# Check Rules
+
+Check rules are perfect for finding specific issues. The LLM lists violations, and the score is calculated based on the count of violations.
+
+## How Check Rules Work
+
+1. **LLM analyzes content** and lists specific violations
+2. **Score Calculation (Density-Based)**: VectorLint scores based on **error density (errors per 100 words)**
+3. **Status**: Score < 10.0 = `warning` or `error` (based on severity)
+
+### The "100 vs 1,000" Rule
+
+| Document Length | Errors | Error Density | Points Lost (Standard) |
+|---------------|---------|---------------|---------------------|
+| 100 words | 1 | 1% | 10 points |
+| 1,000 words | 1 | 0.1% | 1 point |
+
+This makes quality assessment fair across documents of any length.
+
+## Basic Example
+
+```markdown
+---
+evaluator: base
+type: check
+id: GrammarChecker
+name: Grammar Checker
+severity: error
+---
+
+Check this content for grammar issues, spelling errors, and punctuation mistakes.
+
+Report each error with:
+- The specific text with the error
+- Line number where it occurs
+- The correct version or suggestion
+```
+
+### Output
+
+```bash
+Grammar Checker          ████████░░░ 6.0/10
+✗ Grammar error on line 15
+  → "It's" should be "Its"
+✗ Spelling error on line 23
+  → "recieve" should be "receive"
+✗ Punctuation error on line 8
+  → Missing period at end of sentence
+```
+
+## Strictness Levels
+
+You can control penalty weight in your prompt frontmatter:
+
+### Using Named Levels
+
+```yaml
+---
+strictness: standard  # ~10 points per 1% error density
+---
+```
+
+**Available levels:**
+
+| Level | Value | Penalty per 1% error density | Use Case |
+|-------|--------|----------------------------|----------|
+| **lenient** | 1-3 | ~5 points | Drafts, early content |
+| **standard** | 4-7 | ~10 points | General content (default) |
+| **strict** | 8-10 | ~20 points | Technical docs, production |
+
+### Using Numeric Values
+
+```yaml
+---
+strictness: 5  # ~10 points per 1% error density
+---
+```
+
+Direct numeric values give you fine-grained control.
+
+## Example: Spelling Checker
+
+```markdown
+---
+evaluator: base
+type: check
+id: SpellingChecker
+name: Spelling Checker
+severity: warning
+strictness: lenient
+---
+
+Check this content for spelling errors.
+
+For each error found, provide:
+- The misspelled word
+- Line number
+- Correct spelling
+- Context sentence to help user understand error
+
+Ignore:
+- Technical terms specific to the domain
+- Proper names and brands
+- Words with capital letters that might be acronyms
+```
+
+## Example: Link Checker
+
+```markdown
+---
+evaluator: base
+type: check
+id: LinkChecker
+name: Link Checker
+severity: error
+strictness: standard
+---
+
+Check this content for broken or problematic links.
+
+For each link issue found, provide:
+- The link text or URL
+- Line number
+- Type of issue (broken, missing protocol, malformed)
+- Suggestion for fix
+
+Check for:
+- Missing http:// or https://
+- Malformed URLs
+- Dead links (if you can verify)
+- Links to HTTP instead of HTTPS (security)
+```
+
+## Example: Terminology Checker
+
+```markdown
+---
+evaluator: base
+type: check
+id: TerminologyChecker
+name: Terminology Checker
+severity: warning
+strictness: standard
+---
+
+Check this content for inconsistent or incorrect terminology.
+
+## REQUIRED TERMINOLOGY
+
+- Use "user" not "customer"
+- Use "developer" not "programmer"
+- Use "application" not "app"
+- Use "documentation" not "docs" (in headings)
+
+For each terminology issue found, provide:
+- The incorrect term used
+- Line number
+- Correct term from required list
+```
+
+## When to Use Check Rules
+
+Use check rules when:
+
+- You need to **find specific errors** (e.g., "Find all grammar mistakes")
+- The check is **binary** (Pass/Fail) for each item
+- You want a **list of specific violations** to fix
+- You're checking for **countable issues** (grammar, spelling, links, etc.)
+
+### Ideal Use Cases
+
+| Use Case | Example |
+|-----------|---------|
+| **Grammar & Spelling** | "Find all spelling errors" |
+| **Punctuation** | "Check for missing commas" |
+| **Links & References** | "Find broken links" |
+| **Terminology** | "Check for wrong product names" |
+| **Code Examples** | "Find syntax errors in code blocks" |
+
+## Output Format
+
+Check rules produce output in this format:
+
+```json
+{
+  "ruleId": "GrammarChecker",
+  "score": 6.0,
+  "violations": [
+    {
+      "line": 15,
+      "message": "It's should be Its",
+      "severity": "error"
+    },
+    {
+      "line": 23,
+      "message": "recieve should be receive",
+      "severity": "error"
+    }
+  ]
+}
+```
+
+## Best Practices
+
+### 1. Be Specific About What to Check
+
+❌ **Bad:**
+```markdown
+Check for issues.
+```
+
+✅ **Good:**
+```markdown
+Check for grammar, spelling, and punctuation errors.
+Report each error with specific details.
+```
+
+### 2. Provide Clear Output Format
+
+Tell LLM exactly what to output:
+
+```markdown
+For each error, provide:
+- Line number
+- Error type (grammar, spelling, punctuation)
+- Incorrect text
+- Correct version
+```
+
+### 3. Set Appropriate Severity
+
+- Use `error` for issues that should block deployment
+- Use `warning` for suggestions that are nice to fix
+
+### 4. Adjust Strictness by Use Case
+
+```yaml
+---
+# Draft content
+strictness: lenient
+
+# Production content
+strictness: strict
+---
+```
+
+## Common Patterns
+
+### Pattern 1: Simple Check
+
+```yaml
+---
+type: check
+id: SimpleCheck
+severity: warning
+---
+Check for X.
+Report each violation.
+```
+
+### Pattern 2: Check with Examples
+
+```yaml
+---
+type: check
+id: ExampleCheck
+severity: error
+---
+
+Check for X.
+
+Common issues:
+- Issue A
+- Issue B
+
+Report each violation with:
+- Details
+- Fix suggestion
+```
+
+### Pattern 3: Check with Exclusions
+
+```yaml
+---
+type: check
+id: ExclusionCheck
+severity: warning
+---
+
+Check for X.
+
+Ignore:
+- Excluded pattern A
+- Excluded pattern B
+
+Report violations.
+```
+
+## Next Steps
+
+- **[Judge Rules](./judge-rules)** - Learn about rubric-based scoring rules
+- **[Rule Anatomy](./rule-anatomy)** - Rule structure overview
+- **[Best Practices](./best-practices)** - Advanced prompt writing

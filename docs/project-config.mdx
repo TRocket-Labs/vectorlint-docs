@@ -1,0 +1,248 @@
+---
+description: Complete reference for .vectorlint.ini configuration file.
+---
+
+# Project Configuration (.vectorlint.ini)
+
+The `.vectorlint.ini` file in your project root controls how VectorLint evaluates your content. This file defines global settings, file associations, and rule overrides.
+
+## File Location
+
+Place `.vectorlint.ini` in the root of your project directory:
+
+```
+project/
+├── .vectorlint.ini          ← Configuration file
+├── VECTORLINT.md            ← Global style guide (optional)
+├── content/
+│   ├── docs/
+│   │   └── intro.md
+│   └── blog/
+│       └── post.md
+└── .github/
+    └── rules/               ← Custom rule packs
+```
+
+## Complete Example
+
+```ini
+# Global Settings
+RulesPath=.github/rules
+Concurrency=4
+DefaultSeverity=warning
+
+# All markdown files - run "Acme" rule pack
+[**/*.md]
+RunRules=Acme
+GrammarChecker.strictness=7
+
+# Technical documentation - run "Acme" pack with higher standards
+[content/docs/**/*.md]
+RunRules=Acme
+GrammarChecker.strictness=9
+TechnicalAccuracy.threshold=8.0
+
+# Marketing content - run "TechCorp" pack
+[content/marketing/**/*.md]
+RunRules=TechCorp
+BrandVoice.strictness=8
+
+# Drafts - skip all rules
+[content/drafts/**/*.md]
+RunRules=
+```
+
+## Global Settings
+
+These settings appear at the top of the file (the "global" section).
+
+| Setting | Type | Default | Description |
+|----------|------|---------|-------------|
+| `RulesPath` | string | (none) | Root directory for custom rule packs. If omitted, only presets are used. |
+| `Concurrency` | integer | `4` | Number of concurrent evaluations to run. |
+| `DefaultSeverity` | string | `warning` | Default severity level (`warning` or `error`) for reported issues. |
+
+### RulesPath
+
+Specifies the directory containing your custom rule packs. VectorLint recursively loads all `.md` files from subdirectories within this path.
+
+```ini
+RulesPath=.github/rules
+```
+
+**Directory Structure:**
+
+```
+.github/rules/
+├── Acme/                    ← Rule Pack: "Acme"
+│   ├── grammar-checker.md
+│   └── style.md
+└── TechCorp/                ← Rule Pack: "TechCorp"
+    └── brand.md
+```
+
+### Concurrency
+
+Controls how many LLM evaluations run in parallel. Higher values are faster but use more API quota.
+
+```ini
+Concurrency=4
+```
+
+**Recommendations:**
+- `2-4`: Development/testing (lower cost)
+- `4-8`: Regular use (balanced speed/cost)
+- `8+`: CI/CD pipelines (maximum speed)
+
+### DefaultSeverity
+
+Sets the default severity for all rules unless overridden.
+
+```ini
+DefaultSeverity=warning
+```
+
+- `warning`: Issues don't block CI/CD
+- `error`: Issues fail builds (useful for enforcing quality standards)
+
+## File Pattern Sections
+
+Use `[glob/pattern]` sections to map specific files to rule packs and override settings.
+
+### Syntax
+
+```ini
+[glob/pattern]
+RunRules=PackName, AnotherPack
+```
+
+- **Pattern**: Standard glob pattern (e.g., `**/*.md`, `content/docs/**/*.md`)
+- **RunRules**: Comma-separated list of rule pack names to run on matching files
+  - Leave empty (`RunRules=`) to explicitly skip rules for these files
+
+### Pattern Examples
+
+```ini
+# All markdown files in the project
+[**/*.md]
+RunRules=Acme
+
+# Only files in content/docs directory
+[content/docs/**/*.md]
+RunRules=TechDocs
+
+# Specific file
+[README.md]
+RunRules=GeneralRules
+
+# Multiple extensions
+[*.{md,mdx}]
+RunRules=Acme
+```
+
+## Cascading Configuration
+
+VectorLint uses a "cascading" logic to determine which configuration applies to a file.
+
+1. **General to Specific**: All configuration blocks that match a file are applied, starting with general patterns and ending with specific ones.
+2. **Rule Packs**: A file runs rules from all matching patterns (combined).
+3. **Settings**: More specific patterns override general ones.
+
+### Example
+
+```ini
+# General (Applied FIRST)
+[**/*.md]
+RunRules=GeneralRules
+GrammarChecker.strictness=5
+
+# Specific (Applied SECOND, overrides General)
+# MATCHES: content/docs/api.md
+# RESULT: Runs "GeneralRules" AND "TechDocs". strictness is 9 (overrides 5).
+[content/docs/**/*.md]
+RunRules=TechDocs
+GrammarChecker.strictness=9
+```
+
+## Strictness Configuration
+
+Control how strictly rules evaluate content. Strictness determines the penalty weight for error density.
+
+### Syntax
+
+```ini
+[pattern]
+RuleID.strictness=value
+```
+
+### Values
+
+You can use named levels or direct numeric multipliers:
+
+| Level | Value | Penalty per 1% error density | Use Case |
+|-------|-------|-----------------------------|----------|
+| **lenient** | 1-3 | ~5 points | Drafts, early content |
+| **standard** | 4-7 | ~10 points | General content |
+| **strict** | 8-10 | ~20 points | Technical docs, production |
+
+### Example
+
+```ini
+[content/docs/**/*.md]
+RunRules=Acme
+GrammarChecker.strictness=strict
+TechnicalAccuracy.strictness=20
+```
+
+## Rule Pack System
+
+VectorLint uses a pack-based organization for rules:
+
+- **Pack names** are subdirectories within `RulesPath`
+- Recommended practice: Use company names (e.g., `Acme`, `TechCorp`, `Stripe`)
+- Multiple packs can be used simultaneously: `RunRules=Acme,Marketing`
+
+### Example Layout
+
+```
+.github/rules/
+├── Acme/                    ← Company style guide pack
+│   ├── grammar-checker.md
+│   └── Technical/           ← Nested organization supported
+│       └── technical-accuracy.md
+└── TechCorp/                ← Another company's style guide
+    └── brand-voice.md
+```
+
+## Common Patterns
+
+### Skip Rules for Drafts
+
+```ini
+[content/drafts/**/*.md]
+RunRules=
+```
+
+### Higher Standards for Documentation
+
+```ini
+[content/docs/**/*.md]
+RunRules=TechDocs
+GrammarChecker.strictness=strict
+TechnicalAccuracy.strictness=9
+```
+
+### Different Rules for Marketing
+
+```ini
+[content/marketing/**/*.md]
+RunRules=Marketing
+BrandVoice.strictness=8
+SEOOptimizer.strictness=standard
+```
+
+## Next Steps
+
+- **[App Config](./app-config)** - Configure LLM providers
+- **[File Patterns](./file-patterns)** - Advanced pattern matching
+- **[Rule Anatomy](./rule-anatomy)** - Creating custom rules

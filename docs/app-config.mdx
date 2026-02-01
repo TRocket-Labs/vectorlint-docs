@@ -1,0 +1,192 @@
+---
+description: Configure LLM providers and API keys for VectorLint.
+---
+
+# App Configuration (~/.vectorlint/config.toml)
+
+The `~/.vectorlint/config.toml` file contains your LLM provider credentials and global app settings. This file is created automatically by `vectorlint init`.
+
+## File Location
+
+VectorLint looks for the config file in these locations (searches in order):
+
+| Platform | Path |
+|----------|------|
+| **macOS** | `~/Library/Application Support/vale/config.toml` |
+| **Linux** | `$XDG_CONFIG_HOME/vale/config.toml` or `~/.config/vale/config.toml` |
+| **Windows** | `%LOCALAPPDATA%\vectorlint\config.toml` |
+
+You can see the exact locations on your system by running:
+
+```bash
+vectorlint ls-dirs
+```
+
+## Configuration Structure
+
+```toml
+[env]
+LLM_PROVIDER = "openai"
+OPENAI_API_KEY = "sk-..."
+
+# Optional: Search provider for fact-checking
+SEARCH_PROVIDER = "perplexity"
+PERPLEXITY_API_KEY = "pplx-..."
+```
+
+## LLM Providers
+
+VectorLint supports multiple LLM providers. Set `LLM_PROVIDER` to your desired provider.
+
+### OpenAI
+
+```toml
+[env]
+LLM_PROVIDER = "openai"
+OPENAI_API_KEY = "sk-..."
+```
+
+**Supported models:** GPT-4, GPT-3.5-turbo
+
+### Anthropic
+
+```toml
+[env]
+LLM_PROVIDER = "anthropic"
+ANTHROPIC_API_KEY = "sk-ant-..."
+```
+
+**Supported models:** Claude Opus, Claude Sonnet, Claude Haiku
+
+### Azure OpenAI
+
+```toml
+[env]
+LLM_PROVIDER = "azure"
+AZURE_API_KEY = "your-key"
+AZURE_ENDPOINT = "https://your-resource.openai.azure.com"
+AZURE_API_VERSION = "2024-02-15-preview"
+AZURE_DEPLOYMENT = "gpt-4"
+```
+
+**Supported models:** Azure-hosted OpenAI models
+
+### Google Gemini
+
+```toml
+[env]
+LLM_PROVIDER = "gemini"
+GEMINI_API_KEY = "your-key"
+```
+
+**Supported models:** Gemini Pro, other Gemini models
+
+## Search Provider
+
+Some evaluators, such as **TechnicalAccuracy**, require access to current external knowledge to verify facts. VectorLint supports search providers to fetch this information.
+
+### Perplexity
+
+```toml
+[env]
+SEARCH_PROVIDER = "perplexity"
+PERPLEXITY_API_KEY = "pplx-..."
+```
+
+**Supported models:** Sonar models with web search capabilities
+
+## Environment Variables
+
+You can also use a local `.env` file in your project directory (takes precedence over global config).
+
+```bash
+# .env file
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+**Priority order:**
+1. Environment variables (highest priority)
+2. Local `.env` file
+3. Global `~/.vectorlint/config.toml`
+
+## Generating Configuration Files
+
+Use the `vectorlint init` command to generate configuration files automatically:
+
+```bash
+# Full setup with project config
+vectorlint init
+
+# Quick setup (no rule packs)
+vectorlint init --quick
+```
+
+This will create:
+- `~/.vectorlint/config.toml` - App configuration (API keys)
+- `.vectorlint.ini` - Project configuration (if not using `--quick`)
+- `VECTORLINT.md` - Global style guide template
+- `.env.example` - Environment variables template
+
+## Security Best Practices
+
+### Never Commit API Keys
+
+Add your configuration files to `.gitignore`:
+
+```gitignore
+# VectorLint configuration
+.vectorlint/config.toml
+.env
+```
+
+### Use Environment Variables in CI/CD
+
+For CI/CD pipelines, use environment variables instead of config files:
+
+```yaml
+# GitHub Actions example
+env:
+  LLM_PROVIDER: openai
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+```
+
+### Rotate Keys Regularly
+
+Rotate your API keys periodically and update the configuration file.
+
+## Troubleshooting
+
+### Config File Not Found
+
+If VectorLint can't find your configuration file:
+
+1. Check the default location for your OS (see table above)
+2. Ensure the file exists and is properly formatted
+3. Run `vectorlint ls-dirs` to see exact search paths
+
+### Invalid API Key
+
+If you get authentication errors:
+
+1. Verify your API key is correct
+2. Check that the key hasn't expired
+3. Ensure you're using the correct provider
+
+### Permission Denied
+
+If you can't write to the config directory:
+
+```bash
+# macOS/Linux: Create directory with proper permissions
+mkdir -p ~/.config/vectorlint
+touch ~/.config/vectorlint/config.toml
+
+# Windows: Run your terminal as Administrator
+```
+
+## Next Steps
+
+- **[LLM Providers](./llm-providers)** - Detailed provider-specific configuration
+- **[Project Config](./project-config)** - Configure project-specific settings
+- **[Installation](./installation)** - Get VectorLint up and running

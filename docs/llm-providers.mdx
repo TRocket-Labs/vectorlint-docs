@@ -1,0 +1,196 @@
+---
+description: Configure and use different LLM providers with VectorLint.
+---
+
+# LLM Providers
+
+VectorLint supports multiple LLM providers, giving you flexibility to choose the best model for your use case.
+
+## Supported Providers
+
+| Provider | Models | Use Case |
+|----------|---------|----------|
+| **OpenAI** | GPT-4, GPT-3.5-turbo | General purpose, widely used |
+| **Anthropic** | Claude Opus, Sonnet, Haiku | Long context, nuanced understanding |
+| **Azure OpenAI** | Azure-hosted GPT models | Enterprise, compliance requirements |
+| **Google Gemini** | Gemini Pro, others | Cost-effective alternative |
+
+## Choosing a Provider
+
+### OpenAI
+
+**Best for:**
+- General-purpose content evaluation
+- Developers familiar with OpenAI ecosystem
+- Balanced cost/performance ratio
+
+**Configuration:**
+```toml
+[env]
+LLM_PROVIDER = "openai"
+OPENAI_API_KEY = "sk-..."
+```
+
+**Pros:**
+- Widely supported
+- Good balance of speed and quality
+- Extensive documentation
+
+**Cons:**
+- Context window limits (varies by model)
+- Usage-based pricing
+
+### Anthropic
+
+**Best for:**
+- Long-form content evaluation
+- Nuanced quality assessment
+- Complex style and tone analysis
+
+**Configuration:**
+```toml
+[env]
+LLM_PROVIDER = "anthropic"
+ANTHROPIC_API_KEY = "sk-ant-..."
+```
+
+**Pros:**
+- Larger context windows
+- Excellent at nuanced understanding
+- Strong performance on judge rules
+
+**Cons:**
+- Higher cost per token
+- Slightly slower response times
+
+### Azure OpenAI
+
+**Best for:**
+- Enterprise environments
+- Data compliance requirements
+- Deployed in specific regions
+
+**Configuration:**
+```toml
+[env]
+LLM_PROVIDER = "azure"
+AZURE_API_KEY = "your-key"
+AZURE_ENDPOINT = "https://your-resource.openai.azure.com"
+AZURE_API_VERSION = "2024-02-15-preview"
+AZURE_DEPLOYMENT = "gpt-4"
+```
+
+**Pros:**
+- Data residency compliance
+- Enterprise-grade security
+- Consistent with Azure infrastructure
+
+**Cons:**
+- Requires Azure setup
+- More complex configuration
+
+### Google Gemini
+
+**Best for:**
+- Cost-sensitive use cases
+- Basic content evaluation needs
+
+**Configuration:**
+```toml
+[env]
+LLM_PROVIDER = "gemini"
+GEMINI_API_KEY = "your-key"
+```
+
+**Pros:**
+- Competitive pricing
+- Good performance for basic checks
+
+**Cons:**
+- Newer platform (fewer integrations)
+- Limited model options
+
+## Performance Comparison
+
+| Provider | Speed | Quality | Cost | Context Window |
+|----------|--------|----------|-------|---------------|
+| **OpenAI** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+| **Anthropic** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Azure OpenAI** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+| **Gemini** | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+
+## Switching Providers
+
+To switch providers, update your `~/.vectorlint/config.toml` file or `.env` file:
+
+```toml
+[env]
+# Change provider here
+LLM_PROVIDER = "anthropic"  # Switch from "openai" to "anthropic"
+ANTHROPIC_API_KEY = "sk-ant-..."
+```
+
+VectorLint will use the new provider on the next run.
+
+## Best Practices
+
+### Use Cheaper Models for Check Rules
+
+Check rules count violations and don't require deep understanding. Use faster, cheaper models:
+
+```toml
+# For grammar, spelling, etc. (check rules)
+LLM_PROVIDER = "openai"
+# GPT-3.5-turbo is faster and cheaper
+```
+
+### Use Powerful Models for Judge Rules
+
+Judge rules require nuanced quality assessment. Use more powerful models:
+
+```toml
+# For quality scoring, engagement, etc. (judge rules)
+LLM_PROVIDER = "anthropic"
+# Claude Sonnet/Opus for nuanced understanding
+```
+
+### Consider Content Length
+
+For long-form content, choose providers with larger context windows:
+
+- **Anthropic**: Up to 200K tokens
+- **OpenAI**: Up to 32K tokens (GPT-4)
+- **Gemini**: Up to 1M tokens
+
+### Balance Cost vs. Quality
+
+For large projects, run a cost analysis:
+
+```bash
+# Lint a sample and check token usage
+vectorlint sample.md --output json
+
+# Review costs per provider:
+# OpenAI: ~$0.01 per 1K tokens
+# Anthropic: ~$0.03 per 1K tokens
+# Gemini: ~$0.001 per 1K tokens
+```
+
+## Rate Limiting
+
+If you hit rate limits:
+
+1. **Reduce concurrency** in `.vectorlint.ini`:
+   ```ini
+   Concurrency=2  # Reduce from 4
+   ```
+
+2. **Switch providers** temporarily during high-traffic periods
+
+3. **Use multiple API keys** (if available) across different configurations
+
+## Next Steps
+
+- **[App Config](./app-config)** - Configure API keys and credentials
+- **[Configuration](./configuration)** - Complete configuration guide
+- **[Quick Start](./quickstart)** - Get started with VectorLint

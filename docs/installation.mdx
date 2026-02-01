@@ -1,0 +1,103 @@
+---
+description: Install VectorLint globally or run it without installation using npx.
+---
+
+# Installation
+
+Install VectorLint globally or run it without installation using npx.
+
+## Option 1: Global Installation
+
+Install globally from npm:
+
+<Tabs>
+  <Tab label="npm">
+    ```bash
+    npm install -g vectorlint
+    ```
+  </Tab>
+  <Tab label="yarn">
+    ```bash
+    yarn global add vectorlint
+    ```
+  </Tab>
+  <Tab label="pnpm">
+    ```bash
+    pnpm add -g vectorlint
+    ```
+  </Tab>
+</Tabs>
+
+Verify the installation:
+
+```bash
+vectorlint --help
+```
+
+## Option 2: Zero-Install with npx
+
+Run VectorLint without installing it globally:
+
+```bash
+npx vectorlint path/to/article.md
+```
+
+This is useful for:
+
+- Testing VectorLint before committing to an installation
+- One-off linting tasks
+- CI/CD pipelines that prefer explicit versioning
+
+## Requirements
+
+VectorLint requires:
+
+- **Node.js** 18.0 or higher
+- **npm**, **yarn**, or **pnpm** (for installation)
+- **API Key** from an LLM provider (OpenAI, Anthropic, Gemini, or Azure)
+
+## Checking Your Installation
+
+After installation, verify everything is working:
+
+```bash
+# Check version
+vectorlint --version
+
+# View help
+vectorlint --help
+```
+
+You should see output showing the current version and a list of available commands.
+
+## Troubleshooting
+
+### Permission Denied
+
+If you get a permission error during global installation, you may need to use `sudo` or fix npm permissions:
+
+```bash
+sudo npm install -g vectorlint
+```
+
+### Command Not Found
+
+If `vectorlint` isn't found after installation, check if npm's global bin directory is in your PATH:
+
+```bash
+npm config get prefix
+```
+
+Add the output's `bin` directory to your PATH:
+
+```bash
+# Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
+export PATH="$(npm config get prefix)/bin:$PATH"
+```
+
+### Next Steps
+
+After installation, configure your API keys and start linting:
+
+- **[Quick Start](./quickstart)** - Get started in minutes
+- **[Configuration](./configuration)** - Set up your project

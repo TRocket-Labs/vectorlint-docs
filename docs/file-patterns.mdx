@@ -1,0 +1,279 @@
+---
+description: Use glob patterns to map rules to specific files and directories.
+---
+
+# File Patterns
+
+VectorLint uses glob patterns to map rule packs to specific files in your project. This allows you to apply different quality standards to different types of content.
+
+## Basic Syntax
+
+Glob patterns in `.vectorlint.ini` use standard glob syntax:
+
+```ini
+[glob/pattern]
+RunRules=PackName
+```
+
+### Pattern Examples
+
+| Pattern | Matches | Description |
+|---------|----------|-------------|
+| `**/*.md` | All `.md` files | Recursive, any depth |
+| `*.md` | `.md` in root only | Non-recursive |
+| `content/**/*.md` | `.md` in content/ | Recursive under specific directory |
+| `docs/*.md` | `.md` directly in docs/ | Non-recursive in specific directory |
+| `*.{md,mdx}` | `.md` or `.mdx` | Multiple extensions |
+| `**/README.md` | Any `README.md` | Specific filename at any depth |
+| `!drafts/**` | Exclude drafts/ | Negation pattern |
+
+## Common Patterns
+
+### All Markdown Files
+
+```ini
+[**/*.md]
+RunRules=GeneralRules
+```
+
+This applies to every `.md` file in your project, regardless of directory.
+
+### Specific Directory
+
+```ini
+[content/docs/**/*.md]
+RunRules=TechDocs
+```
+
+Applies only to `.md` files in `content/docs/` and subdirectories.
+
+### Multiple File Types
+
+```ini
+[*.{md,mdx}]
+RunRules=ContentRules
+```
+
+Matches both `.md` and `.mdx` files at any depth.
+
+### Specific Filename
+
+```ini
+[README.md]
+RunRules=ReadmeRules
+```
+
+Matches only `README.md` in the project root.
+
+### Multiple Patterns in One Section
+
+```ini
+[*.{md,mdx}]
+[**/*.txt]
+RunRules=TextRules
+```
+
+Both patterns will run the same rules (TextRules).
+
+## Excluding Files
+
+Use `!` prefix to exclude files from linting:
+
+```ini
+# Lint everything except drafts
+[**/*.md]
+RunRules=GeneralRules
+
+[!content/drafts/**]
+RunRules=
+```
+
+### Multiple Exclusions
+
+```ini
+# Lint content except drafts and archived
+[**/*.md]
+RunRules=GeneralRules
+
+[!content/drafts/**]
+[!archived/**]
+RunRules=
+```
+
+## Cascading Configuration
+
+VectorLint applies all matching patterns to a file, with more specific patterns overriding general ones.
+
+### How It Works
+
+1. All matching patterns apply to a file
+2. Rule packs from all patterns are combined
+3. Settings from more specific patterns override general ones
+
+### Example
+
+```ini
+# General pattern - applies first
+[**/*.md]
+RunRules=GeneralRules
+GrammarChecker.strictness=5
+
+# Specific pattern - applies second, overrides strictness
+[content/docs/**/*.md]
+RunRules=TechDocs
+GrammarChecker.strictness=9
+```
+
+**For file `content/docs/api.md`:**
+- Runs: `GeneralRules` AND `TechDocs` (combined)
+- Strictness: `9` (specific overrides general)
+
+## Pattern Matching Order
+
+VectorLint uses specificity to determine override order:
+
+| Specificity | Example | More Specific Than |
+|-------------|----------|-------------------|
+| **Low** | `*.md` | - |
+| **Medium** | `docs/**/*.md` | `*.md` |
+| **High** | `docs/api.md` | `docs/**/*.md` |
+
+## Advanced Patterns
+
+### Nested Directory Matching
+
+```ini
+[content/docs/guides/**/*.md]
+RunRules=GuideRules
+```
+
+Matches files like:
+- `content/docs/guides/intro.md`
+- `content/docs/guides/advanced/step1.md`
+
+### Parent-Child Relationships
+
+```ini
+# Parent: All content
+[content/**/*.md]
+RunRules=ContentRules
+
+# Child: API docs (inherits ContentRules, adds APIDocs)
+[content/docs/api/**/*.md]
+RunRules=APIDocs
+```
+
+For `content/docs/api/users.md`:
+- Runs: `ContentRules` AND `APIDocs`
+
+### File Prefix/Suffix
+
+```ini
+[content/blog/*-draft.md]
+RunRules=DraftRules
+```
+
+Matches files like:
+- `content/blog/intro-draft.md`
+- `content/blog/tutorial-draft.md`
+
+## Combining with Strictness
+
+```ini
+# Blog posts - standard quality
+[content/blog/**/*.md]
+RunRules=BlogRules
+GrammarChecker.strictness=standard
+HeadlineEvaluator.strictness=7
+
+# Published posts - higher quality
+[content/blog/published/**/*.md]
+RunRules=BlogRules
+GrammarChecker.strictness=strict
+HeadlineEvaluator.strictness=9
+```
+
+## Use Cases
+
+### Different Rules by Content Type
+
+```ini
+# Documentation
+[docs/**/*.md]
+RunRules=TechDocs
+GrammarChecker.strictness=9
+
+# Blog posts
+[blog/**/*.md]
+RunRules=BlogRules
+HeadlineEvaluator.strictness=8
+
+# Marketing copy
+[marketing/**/*.md]
+RunRules=MarketingRules
+BrandVoice.strictness=strict
+```
+
+### Staged Content
+
+```ini
+# Drafts - lenient
+[content/drafts/**/*.md]
+RunRules=GeneralRules
+GrammarChecker.strictness=lenient
+
+# Review - standard
+[content/review/**/*.md]
+RunRules=GeneralRules
+GrammarChecker.strictness=standard
+
+# Published - strict
+[content/published/**/*.md]
+RunRules=GeneralRules
+GrammarChecker.strictness=strict
+```
+
+### Skip Rules for Generated Content
+
+```ini
+# Lint everything
+[**/*.md]
+RunRules=GeneralRules
+
+# Skip auto-generated docs
+[!generated/**]
+[!api/generated/**]
+RunRules=
+```
+
+## Troubleshooting
+
+### Pattern Not Matching Files
+
+If a pattern isn't matching expected files:
+
+1. **Check path separators**: Use `/` always (even on Windows)
+2. **Verify glob syntax**: Ensure `**` and `*` are used correctly
+3. **Test pattern**: Use a tool like `globstar` to test patterns
+
+### Conflicting Patterns
+
+If rules conflict:
+
+1. List all patterns in `.vectorlint.ini`
+2. Check specificity (more specific wins)
+3. Use `!` to exclude explicitly if needed
+
+### Too Many Files Matched
+
+If pattern matches more files than expected:
+
+1. Be more specific with path
+2. Use `!` exclusions
+3. Avoid overly broad patterns like `**/*`
+
+## Next Steps
+
+- **[Project Config](./project-config)** - Complete configuration reference
+- **[Rule Anatomy](./rule-anatomy)** - Creating custom rules
+- **[Configuration](./configuration)** - Configuration overview

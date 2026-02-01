@@ -1,0 +1,131 @@
+---
+description: Overview of VectorLint configuration options.
+---
+
+# Configuration
+
+VectorLint uses a hierarchical configuration system that lets you control behavior at different levels.
+
+## Configuration Layers
+
+VectorLint looks for configuration in this order:
+
+1. **Command-line flags** (highest priority)
+2. **Local `.env` file** (project-specific)
+3. **Global `~/.vectorlint/config.toml`** (provider credentials)
+4. **Project `.vectorlint.ini`** (project settings)
+5. **Built-in presets** (lowest priority)
+
+This means you can override settings at higher levels without affecting the defaults.
+
+## Configuration Files
+
+### `~/.vectorlint/config.toml` - App Configuration
+
+Global configuration for LLM providers and credentials. This file is created automatically by `vectorlint init`.
+
+**Location:**
+- macOS: `~/Library/Application Support/vale/.vale.ini`
+- Linux: `$XDG_CONFIG_HOME/vale/config.toml` or `~/.config/vale/config.toml`
+- Windows: `%LOCALAPPDATA%\vectorlint\config.toml`
+
+**What it contains:**
+- LLM provider selection
+- API keys for OpenAI, Anthropic, Gemini, Azure
+- Search provider configuration (for TechnicalAccuracy evaluator)
+
+```toml
+[env]
+LLM_PROVIDER = "openai"
+OPENAI_API_KEY = "sk-..."
+
+# Optional: Search provider for fact-checking
+SEARCH_PROVIDER = "perplexity"
+PERPLEXITY_API_KEY = "pplx-..."
+```
+
+### `.vectorlint.ini` - Project Configuration
+
+Project-specific settings in your repository root. Controls which rules run on which files.
+
+**What it contains:**
+- RulesPath location (where custom rules are stored)
+- Concurrency settings
+- Default severity
+- File pattern mappings to rule packs
+- Strictness overrides
+
+```ini
+# Global settings
+RulesPath=.github/rules
+Concurrency=4
+DefaultSeverity=warning
+
+# All markdown files
+[**/*.md]
+RunRules=Acme
+GrammarChecker.strictness=7
+
+# Technical docs - higher strictness
+[content/docs/**/*.md]
+RunRules=Acme
+GrammarChecker.strictness=9
+
+# Marketing - different pack
+[content/marketing/**/*.md]
+RunRules=TechCorp
+```
+
+### `VECTORLINT.md` - Global Style Guide
+
+Optional file in your project root that defines global style guidelines. This is prepended to every evaluation prompt.
+
+**Use cases:**
+- Define tone and voice preferences
+- Specify terminology standards
+- Document writing conventions
+
+```markdown
+# TinyRocket Style Guide
+
+## Tone
+
+- Write in a conversational, friendly tone
+- Avoid jargon unless explaining technical concepts
+- Use active voice
+
+## Terminology
+
+- Use "user" not "customer"
+- Use "developer" not "programmer"
+```
+
+### `.env` - Environment Variables
+
+Local environment variables for API keys (takes precedence over global config).
+
+```bash
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+> **Security Note:** Never commit `.env` files. Add them to `.gitignore`.
+
+## Configuration Quick Reference
+
+| Setting | Location | Purpose |
+|---------|----------|---------|
+| `LLM_PROVIDER` | `~/.vectorlint/config.toml` or `.env` | Choose OpenAI, Anthropic, Gemini, or Azure |
+| API Keys | `~/.vectorlint/config.toml` or `.env` | LLM and search provider credentials |
+| `RulesPath` | `.vectorlint.ini` | Directory containing custom rule packs |
+| `RunRules` | `.vectorlint.ini` | Which rule packs to run on matching files |
+| `Concurrency` | `.vectorlint.ini` | Number of concurrent LLM evaluations |
+| `DefaultSeverity` | `.vectorlint.ini` | Default error severity (`warning` or `error`) |
+| `.strictness` | `.vectorlint.ini` | Penalty weight for specific rules |
+
+## Next Steps
+
+- **[Project Config](./project-config)** - Detailed `.vectorlint.ini` reference
+- **[App Config](./app-config)** - Configure LLM providers and API keys
+- **[LLM Providers](./llm-providers)** - Supported providers and setup
+- **[File Patterns](./file-patterns)** - Map rules to specific files

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "VectorLint",
+  "colors": {
+    "primary": "#3B82F6",
+    "light": "#60A5FA",
+    "dark": "#2563EB"
+  },
+  "description": "An LLM-based prose linter that lets you enforce your style guide in one prompt.",
+  "logo": {
+    "href": "https://github.com/TRocket-Labs/vectorlint"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "icon": "rocket",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart",
+          "configuration"
+        ]
+      },
+      {
+        "group": "Configuration",
+        "icon": "settings",
+        "pages": [
+          "project-config",
+          "app-config",
+          "llm-providers",
+          "file-patterns"
+        ]
+      },
+      {
+        "group": "Creating Rules",
+        "icon": "wand-2",
+        "pages": [
+          "rule-anatomy",
+          "check-rules",
+          "judge-rules",
+          "target-specification",
+          "best-practices",
+          "examples"
+        ]
+      },
+      {
+        "group": "Reference",
+        "icon": "book",
+        "pages": [
+          "output-formats",
+          "quality-scoring",
+          "troubleshooting",
+          "contributing"
+        ]
+      }
+    ]
+  }
+}

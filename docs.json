@@ -8,9 +8,6 @@
     "dark": "#2563EB"
   },
   "description": "An LLM-based prose linter that lets you enforce your style guide in one prompt.",
-  "logo": {
-    "href": "https://github.com/TRocket-Labs/vectorlint"
-  },
   "navigation": {
     "groups": [
       {

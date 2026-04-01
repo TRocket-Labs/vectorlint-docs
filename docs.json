@@ -8,50 +8,15 @@
     "dark": "#2563EB"
   },
   "description": "An LLM-based prose linter that lets you enforce your style guide in one prompt.",
-  "navigation": {
-    "groups": [
-      {
-        "group": "Getting Started",
-        "icon": "rocket",
-        "pages": [
-          "introduction",
-          "installation",
-          "quickstart",
-          "configuration"
-        ]
-      },
-      {
-        "group": "Configuration",
-        "icon": "settings",
-        "pages": [
-          "project-config",
-          "app-config",
-          "llm-providers",
-          "file-patterns"
-        ]
-      },
-      {
-        "group": "Creating Rules",
-        "icon": "wand-2",
-        "pages": [
-          "rule-anatomy",
-          "check-rules",
-          "judge-rules",
-          "target-specification",
-          "best-practices",
-          "examples"
-        ]
-      },
-      {
-        "group": "Reference",
-        "icon": "book",
-        "pages": [
-          "output-formats",
-          "quality-scoring",
-          "troubleshooting",
-          "contributing"
-        ]
-      }
-    ]
-  }
+  "tabs": [
+    {
+      "name": "CLI",
+      "url": "cli"
+    },
+    {
+      "name": "Platform",
+      "url": "platform"
+    }
+  ],
+  "navigation": {}
 }

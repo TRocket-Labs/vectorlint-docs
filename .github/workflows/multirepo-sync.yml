@@ -1,0 +1,33 @@
+name: Aggregate Mintlify Docs
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight to pick up any changes
+
+concurrency:
+  group: aggregate-mintlify-docs
+  cancel-in-progress: true
+
+jobs:
+  aggregate-docs:
+    runs-on: ubuntu-latest
+    name: Aggregate mintlify docs
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+
+      - name: Run mintlify action
+        uses: mintlify/mintlify-multirepo-action@v0.15
+        with:
+          # Note: A Personal Access Token (PAT) is REQUIRED here because it needs to pull from your private 'vectorlint-monorepo'
+          token: ${{ secrets.MINTLIFY_SYNC_PAT }}
+          target-branch: docs # This is the branch Mintlify will build from
+          repos: |
+            - owner: TRocket-Labs
+              repo: vectorlint
+              subdirectory: docs
+            - owner: TRocket-Labs
+              repo: vectorlint-monorepo
+              subdirectory: docs

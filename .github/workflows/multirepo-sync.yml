@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run mintlify action
-        uses: mintlify/mintlify-multirepo-action@v0.15
+        uses: mintlify/mintlify-multirepo-action@main
         with:
           # Note: A Personal Access Token (PAT) is REQUIRED here because it needs to pull from your private 'vectorlint-monorepo'
           token: ${{ secrets.MINTLIFY_SYNC_PAT }}

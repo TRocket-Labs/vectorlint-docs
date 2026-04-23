@@ -1,5 +1,5 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "$schema": "https://mintlify.com/schema.json",
   "theme": "mint",
   "name": "VectorLint",
   "colors": {
@@ -8,15 +8,5 @@
     "dark": "#2563EB"
   },
   "description": "An LLM-based prose linter that lets you enforce your style guide in one prompt.",
-  "tabs": [
-    {
-      "name": "CLI",
-      "url": "cli"
-    },
-    {
-      "name": "Platform",
-      "url": "platform"
-    }
-  ],
-  "navigation": {}
+  "navigation": []
 }

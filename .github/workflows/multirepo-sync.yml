@@ -31,6 +31,3 @@ jobs:
             - owner: TRocket-Labs
               repo: vectorlint
               subdirectory: docs
-            - owner: TRocket-Labs
-              repo: vectorlint-monorepo
-              subdirectory: docs

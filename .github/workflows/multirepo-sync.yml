@@ -22,7 +22,7 @@ jobs:
         run: git config --global url."https://x-access-token:${{ secrets.MINTLIFY_SYNC_PAT }}@github.com/".insteadOf "https://github.com/"
 
       - name: Run mintlify action
-        uses: TRocket-Labs/mintlify-multirepo-action@v0.17-docs-json
+        uses: TRocket-Labs/multirepo-action@v0.17-docs-json
         with:
           # Note: A Personal Access Token (PAT) is REQUIRED here because it needs to pull from your private 'vectorlint-monorepo'
           token: ${{ secrets.MINTLIFY_SYNC_PAT }}
